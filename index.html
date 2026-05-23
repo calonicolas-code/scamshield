@@ -676,7 +676,8 @@ Detect: urgency tactics, suspicious links, requests for sensitive data, unrealis
       loadHistory();
 
     } catch(e) {
-      document.getElementById('resultSection').innerHTML = `<div style="padding:0 1.5rem 1.5rem;font-size:14px;color:var(--danger)">❌ Error: ${e.message}</div>`;
+      const errDetail = JSON.stringify(data || e.message);
+document.getElementById('resultSection').innerHTML = `<div style="padding:0 1.5rem 1.5rem;font-size:14px;color:var(--danger)">❌ Error: ${e.message}<br><small style="color:var(--text3);word-break:break-all">${errDetail}</small></div>`;
     }
 
     btn.disabled = false; btn.innerHTML = '🔍 Analyze now';
