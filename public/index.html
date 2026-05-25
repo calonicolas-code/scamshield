@@ -4,244 +4,294 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScamShield AI — Detect Scams Instantly</title>
-<meta name="description" content="AI-powered scam detector. Analyze any suspicious message, email, link or screenshot in seconds.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0a0a0f; --bg2: #111118; --bg3: #1a1a24;
-    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
-    --text: #f0f0f5; --text2: #9090a8; --text3: #5a5a72;
-    --accent: #6c63ff; --accent2: #a89cff;
-    --safe: #22d3a0; --safe-bg: rgba(34,211,160,0.08);
-    --warn: #f59e0b; --warn-bg: rgba(245,158,11,0.08);
-    --danger: #f43f5e; --danger-bg: rgba(244,63,94,0.08);
-    --font-d: 'Syne', sans-serif; --font-b: 'DM Sans', sans-serif;
-  }
-  html { scroll-behavior: smooth; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font-b); font-size: 16px; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
-  body::before { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(108,99,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(108,99,255,0.03) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
-  .orb { position:fixed; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0; }
-  .orb1 { width:500px; height:500px; background:rgba(108,99,255,0.12); top:-150px; right:-100px; }
-  .orb2 { width:400px; height:400px; background:rgba(244,63,94,0.06); bottom:10%; left:-100px; }
-  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 2rem; height:64px; background:rgba(10,10,15,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
-  .nav-logo { font-family:var(--font-d); font-size:20px; font-weight:800; letter-spacing:-0.02em; display:flex; align-items:center; gap:8px; cursor:pointer; }
-  .logo-icon { width:32px; height:32px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px; }
-  .nav-right { display:flex; align-items:center; gap:12px; }
-  .nav-btn { background:none; border:1px solid var(--border2); color:var(--text2); padding:7px 16px; border-radius:8px; font-size:13px; cursor:pointer; font-family:var(--font-b); transition:all 0.2s; }
-  .nav-btn:hover { border-color:var(--accent); color:var(--accent2); }
-  .nav-btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-  .nav-btn-primary:hover { opacity:0.88; }
-  .nav-user { font-size:13px; color:var(--text2); display:flex; align-items:center; gap:10px; }
-  .plan-badge { font-size:10px; padding:2px 8px; border-radius:100px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
-  .badge-free { background:rgba(255,255,255,0.08); color:var(--text3); }
-  .badge-pro { background:rgba(108,99,255,0.2); color:var(--accent2); }
-  .badge-business { background:rgba(244,63,94,0.2); color:#f87394; }
-  .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); z-index:200; display:none; align-items:center; justify-content:center; padding:1rem; }
-  .overlay.show { display:flex; }
-  .modal { background:var(--bg2); border:1px solid var(--border2); border-radius:20px; padding:2rem; width:100%; max-width:420px; animation:fadeUp 0.3s ease; position:relative; }
-  .modal h2 { font-family:var(--font-d); font-size:22px; font-weight:700; margin-bottom:6px; }
-  .modal p { font-size:14px; color:var(--text2); margin-bottom:1.5rem; line-height:1.6; }
-  .modal-tabs { display:flex; gap:0; margin-bottom:1.5rem; background:var(--bg3); border-radius:8px; padding:3px; }
-  .modal-tab { flex:1; padding:8px; text-align:center; font-size:13px; font-weight:500; border:none; background:none; color:var(--text3); cursor:pointer; border-radius:6px; font-family:var(--font-b); transition:all 0.2s; }
-  .modal-tab.active { background:var(--accent); color:#fff; }
-  .form-group { margin-bottom:1rem; }
-  .form-group label { font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; display:block; margin-bottom:6px; }
-  .form-input { width:100%; background:var(--bg3); border:1px solid var(--border2); border-radius:8px; color:var(--text); font-family:var(--font-b); font-size:14px; padding:10px 14px; transition:border-color 0.2s; }
-  .form-input:focus { outline:none; border-color:var(--accent); }
-  .form-input::placeholder { color:var(--text3); }
-  .btn-full { width:100%; padding:12px; background:var(--accent); border:none; border-radius:8px; color:#fff; font-size:15px; font-weight:500; cursor:pointer; font-family:var(--font-b); transition:opacity 0.2s; margin-top:4px; }
-  .btn-full:hover { opacity:0.88; }
-  .btn-full:disabled { opacity:0.4; cursor:not-allowed; }
-  .modal-error { font-size:13px; color:var(--danger); margin-top:8px; display:none; }
-  .modal-success { font-size:13px; color:var(--safe); margin-top:8px; display:none; }
-  .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text3); font-size:20px; cursor:pointer; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; }
-  .modal-close:hover { color:var(--text); background:var(--bg3); }
-  .hero { position:relative; z-index:1; padding:140px 2rem 60px; text-align:center; max-width:860px; margin:0 auto; }
-  .hero-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(108,99,255,0.1); border:1px solid rgba(108,99,255,0.25); color:var(--accent2); padding:5px 14px; border-radius:100px; font-size:12px; font-weight:500; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:1.5rem; animation:fadeUp 0.6s ease both; }
-  .pulse { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
-  .hero h1 { font-family:var(--font-d); font-size:clamp(42px,7vw,80px); font-weight:800; line-height:1.05; letter-spacing:-0.03em; margin-bottom:1.2rem; animation:fadeUp 0.6s 0.1s ease both; }
-  .hero h1 span { color:var(--accent2); }
-  .hero-sub { font-size:18px; color:var(--text2); font-weight:300; max-width:540px; margin:0 auto 2.5rem; animation:fadeUp 0.6s 0.2s ease both; }
-  .hero-stats { display:flex; justify-content:center; gap:3rem; margin-bottom:3rem; animation:fadeUp 0.6s 0.3s ease both; }
-  .stat-num { font-family:var(--font-d); font-size:28px; font-weight:700; }
-  .stat-label { font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; }
-  .analyzer-wrap { position:relative; z-index:1; max-width:760px; margin:0 auto; padding:0 1.5rem 5rem; animation:fadeUp 0.6s 0.4s ease both; }
-  .analyzer-card { background:var(--bg2); border:1px solid var(--border2); border-radius:20px; overflow:hidden; }
-  .card-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-  .dot { width:10px; height:10px; border-radius:50%; }
-  .d1{background:#f43f5e;} .d2{background:#f59e0b;} .d3{background:#22d3a0;}
-  .card-title { margin-left:auto; font-size:13px; color:var(--text3); }
-  .tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; }
-  .tab { flex:1; min-width:120px; padding:14px 10px; text-align:center; font-size:13px; font-weight:500; color:var(--text3); cursor:pointer; border:none; background:none; font-family:var(--font-b); transition:all 0.2s; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; }
-  .tab.active { color:var(--accent2); border-bottom-color:var(--accent); }
-  .tab-panel { display:none; } .tab-panel.active { display:block; }
-  .input-zone { padding:1.25rem 1.5rem; }
-  .input-label { font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px; display:block; }
-  textarea, .text-input { width:100%; background:var(--bg3); border:1px solid var(--border2); border-radius:10px; color:var(--text); font-family:var(--font-b); font-size:14px; padding:12px 14px; transition:border-color 0.2s; }
-  textarea { min-height:120px; resize:none; line-height:1.6; }
-  .text-input { height:46px; }
-  textarea:focus, .text-input:focus { outline:none; border-color:var(--accent); }
-  textarea::placeholder, .text-input::placeholder { color:var(--text3); }
-  .quick-examples { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-  .ex-chip { font-size:11px; padding:4px 10px; border-radius:6px; border:1px solid var(--border2); color:var(--text3); background:none; cursor:pointer; font-family:var(--font-b); transition:all 0.15s; }
-  .ex-chip:hover { border-color:var(--accent); color:var(--accent2); }
-  .drop-zone { border:2px dashed var(--border2); border-radius:12px; padding:2rem 1.5rem; text-align:center; cursor:pointer; transition:all 0.2s; position:relative; background:var(--bg3); }
-  .drop-zone:hover, .drop-zone.dragover { border-color:var(--accent); background:rgba(108,99,255,0.05); }
-  .drop-zone-icon { font-size:36px; margin-bottom:10px; }
-  .drop-zone-text { font-size:14px; color:var(--text2); margin-bottom:4px; }
-  .drop-zone-sub { font-size:12px; color:var(--text3); }
-  .drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-  .image-preview { margin-top:12px; position:relative; display:inline-block; }
-  .image-preview img { max-height:180px; max-width:100%; border-radius:8px; border:1px solid var(--border2); display:block; }
-  .img-remove { position:absolute; top:-8px; right:-8px; width:22px; height:22px; background:var(--danger); border:none; border-radius:50%; color:#fff; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-  .paste-hint { margin-top:10px; font-size:12px; color:var(--text3); display:flex; align-items:center; justify-content:center; gap:6px; }
-  .paste-key { background:var(--bg2); border:1px solid var(--border2); border-radius:4px; padding:1px 6px; font-family:monospace; font-size:11px; color:var(--text2); }
-  .card-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-  .usage-info { font-size:12px; color:var(--text3); }
-  .usage-bar { height:3px; background:var(--bg3); border-radius:2px; width:80px; margin-top:4px; }
-  .usage-fill { height:100%; background:var(--accent); border-radius:2px; transition:width 0.3s; }
-  .analyze-btn { background:var(--accent); color:#fff; border:none; padding:10px 24px; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font-b); display:flex; align-items:center; gap:8px; transition:opacity 0.2s,transform 0.1s; white-space:nowrap; }
-  .analyze-btn:hover { opacity:0.88; }
-  .analyze-btn:active { transform:scale(0.98); }
-  .analyze-btn:disabled { opacity:0.4; cursor:not-allowed; }
-  .limit-banner { margin:0 1.5rem 1.5rem; padding:12px 16px; background:var(--danger-bg); border:1px solid rgba(244,63,94,0.2); border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:1rem; font-size:13px; color:var(--danger); }
-  .upgrade-btn { background:var(--danger); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; font-family:var(--font-b); white-space:nowrap; }
-  #resultSection { padding:0 1.5rem 1.5rem; }
-  .loading-bar { height:3px; background:var(--bg3); border-radius:2px; overflow:hidden; margin-bottom:1.5rem; }
-  .loading-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; animation:loadAnim 1.5s ease infinite; }
-  @keyframes loadAnim { 0%{width:0%;margin-left:0} 50%{width:60%;margin-left:20%} 100%{width:0%;margin-left:100%} }
-  .result-card { border-radius:12px; overflow:hidden; border:1px solid var(--border2); animation:fadeUp 0.4s ease; }
-  .result-header { padding:1.25rem 1.5rem; display:flex; align-items:center; gap:14px; }
-  .result-icon { font-size:30px; }
-  .result-verdict { font-family:var(--font-d); font-size:22px; font-weight:700; }
-  .result-sub { font-size:13px; margin-top:2px; opacity:0.8; }
-  .risk-badge { margin-left:auto; text-align:center; background:rgba(0,0,0,0.2); border-radius:10px; padding:8px 16px; }
-  .risk-num { font-family:var(--font-d); font-size:28px; font-weight:700; line-height:1; }
-  .risk-label { font-size:10px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.7; margin-top:2px; }
-  .result-body { padding:1.25rem 1.5rem; background:var(--bg3); border-top:1px solid var(--border); }
-  .result-section-title { font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text3); font-weight:500; margin-bottom:8px; }
-  .result-analysis { font-size:14px; color:var(--text2); line-height:1.7; margin-bottom:1.25rem; }
-  .signals { display:flex; flex-direction:column; gap:6px; }
-  .signal { display:flex; align-items:flex-start; gap:10px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:13px; }
-  .sig-icon { font-size:15px; flex-shrink:0; margin-top:1px; }
-  .sig-text { color:var(--text2); line-height:1.5; }
-  .result-safe .result-header { background:var(--safe-bg); }
-  .result-safe .result-verdict { color:var(--safe); }
-  .result-warn .result-header { background:var(--warn-bg); }
-  .result-warn .result-verdict { color:var(--warn); }
-  .result-danger .result-header { background:var(--danger-bg); }
-  .result-danger .result-verdict { color:var(--danger); }
-  .section { position:relative; z-index:1; padding:5rem 2rem; max-width:1100px; margin:0 auto; }
-  .section-label { font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--accent2); font-weight:500; text-align:center; margin-bottom:12px; }
-  .section-title { font-family:var(--font-d); font-size:clamp(28px,4vw,42px); font-weight:700; text-align:center; letter-spacing:-0.02em; margin-bottom:0.5rem; }
-  .section-sub { text-align:center; color:var(--text2); font-size:16px; font-weight:300; margin-bottom:3rem; }
-  .pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; max-width:900px; margin:0 auto; }
-  .pricing-card { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; position:relative; }
-  .pricing-card.popular { border-color:var(--accent); }
-  .popular-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; font-size:11px; font-weight:600; padding:4px 14px; border-radius:100px; letter-spacing:0.05em; white-space:nowrap; }
-  .pricing-name { font-family:var(--font-d); font-size:18px; font-weight:700; margin-bottom:6px; }
-  .pricing-price { font-family:var(--font-d); font-size:40px; font-weight:800; line-height:1; margin-bottom:4px; }
-  .pricing-price span { font-size:16px; font-weight:400; color:var(--text2); }
-  .pricing-desc { font-size:13px; color:var(--text3); margin-bottom:1.5rem; }
-  .pricing-features { list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom:1.5rem; }
-  .pricing-features li { font-size:13px; color:var(--text2); display:flex; align-items:center; gap:8px; }
-  .pricing-features li::before { content:'✓'; color:var(--safe); font-weight:700; flex-shrink:0; }
-  .pricing-btn { width:100%; padding:11px; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font-b); transition:all 0.2s; }
-  .pricing-btn-outline { background:none; border:1px solid var(--border2); color:var(--text); }
-  .pricing-btn-outline:hover { border-color:var(--accent); color:var(--accent2); }
-  .pricing-btn-filled { background:var(--accent); border:none; color:#fff; }
-  .pricing-btn-filled:hover { opacity:0.88; }
-  .history-section { position:relative; z-index:1; max-width:760px; margin:0 auto; padding:0 1.5rem 3rem; }
-  .history-title { font-family:var(--font-d); font-size:18px; font-weight:600; margin-bottom:1rem; }
-  .history-list { display:flex; flex-direction:column; gap:8px; }
-  .history-item { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; font-size:13px; }
-  .h-verdict { font-weight:600; font-size:12px; padding:3px 8px; border-radius:6px; flex-shrink:0; }
-  .h-scam { background:var(--danger-bg); color:var(--danger); }
-  .h-suspicious { background:var(--warn-bg); color:var(--warn); }
-  .h-legitimate { background:var(--safe-bg); color:var(--safe); }
-  .h-text { flex:1; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .h-date { color:var(--text3); flex-shrink:0; }
-  footer { position:relative; z-index:1; border-top:1px solid var(--border); padding:2rem; text-align:center; font-size:13px; color:var(--text3); }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-  @media(max-width:600px) { .hero-stats{gap:1.5rem} .card-footer{flex-direction:column;align-items:stretch} .analyze-btn{justify-content:center} }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f7ff;--bg2:#ffffff;--bg3:#eef0fb;
+  --border:rgba(91,82,232,0.12);--border2:rgba(91,82,232,0.22);
+  --text:#0f0f1a;--text2:#3a3a5c;--text3:#7070a0;
+  --accent:#5b52e8;--accent2:#7c75ff;
+  --safe:#0db87a;--safe-bg:#e6faf4;
+  --warn:#d97706;--warn-bg:#fff8e6;
+  --danger:#e53e6a;--danger-bg:#ffeef3;
+  --free-color:#6b7280;--pro-color:#5b52e8;--biz-color:#e53e6a;
+  --font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:16px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:68px;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-bottom:2px solid var(--border);box-shadow:0 2px 20px rgba(91,82,232,0.08)}
+.nav-logo{font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.02em;display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-btn{background:none;border:2px solid var(--border2);color:var(--text2);padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:all 0.2s}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent)}
+.nav-btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.nav-btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.nav-user{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:10px;font-weight:500}
+.plan-badge{font-size:10px;padding:3px 10px;border-radius:100px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}
+.badge-free{background:#f3f4f6;color:var(--free-color)}
+.badge-pro{background:#ede9ff;color:var(--pro-color)}
+.badge-business{background:#ffeef3;color:var(--biz-color)}
+
+/* LANG SWITCHER */
+.lang-switcher{display:flex;gap:4px;background:var(--bg3);border-radius:8px;padding:3px}
+.lang-btn{border:none;background:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-b);color:var(--text3);transition:all 0.2s}
+.lang-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.overlay.show{display:flex}
+.modal{background:#fff;border:2px solid var(--border2);border-radius:24px;padding:2rem;width:100%;max-width:420px;animation:fadeUp 0.3s ease;position:relative;box-shadow:0 20px 60px rgba(91,82,232,0.15)}
+.modal h2{font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px}
+.modal p{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
+.modal-tabs{display:flex;margin-bottom:1.5rem;background:var(--bg3);border-radius:10px;padding:4px;gap:4px}
+.modal-tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:600;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:7px;font-family:var(--font-b);transition:all 0.2s}
+.modal-tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(91,82,232,0.3)}
+.form-group{margin-bottom:1rem}
+.form-group label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px;font-weight:600}
+.form-input{width:100%;background:var(--bg3);border:2px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-b);font-size:14px;padding:11px 14px;transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+.btn-full{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:opacity 0.2s;margin-top:4px;letter-spacing:0.01em}
+.btn-full:hover{opacity:0.9}
+.btn-full:disabled{opacity:0.4;cursor:not-allowed}
+.modal-error{font-size:13px;color:var(--danger);margin-top:8px;display:none;font-weight:500}
+.modal-success{font-size:13px;color:var(--safe);margin-top:8px;display:none;font-weight:500}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--bg3);border:none;color:var(--text2);font-size:16px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-weight:700}
+.modal-close:hover{background:var(--border2);color:var(--text)}
+
+/* HERO */
+.hero{position:relative;z-index:1;padding:120px 2rem 50px;text-align:center;max-width:800px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ede9ff,#e8f4ff);border:2px solid rgba(91,82,232,0.2);color:var(--accent);padding:6px 18px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:1.5rem;animation:fadeUp 0.6s ease both}
+.pulse{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.5)}}
+.hero h1{font-family:var(--font-d);font-size:clamp(40px,6vw,72px);font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:1.2rem;animation:fadeUp 0.6s 0.1s ease both;color:var(--text)}
+.hero h1 .highlight{background:linear-gradient(135deg,var(--accent),#e53e6a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:18px;color:var(--text2);font-weight:400;max-width:520px;margin:0 auto 2.5rem;animation:fadeUp 0.6s 0.2s ease both;line-height:1.7}
+.hero-stats{display:flex;justify-content:center;gap:2rem;margin-bottom:2.5rem;animation:fadeUp 0.6s 0.3s ease both;flex-wrap:wrap}
+.stat-item{text-align:center;background:#fff;border:2px solid var(--border);border-radius:16px;padding:14px 24px;min-width:110px}
+.stat-num{font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-top:2px}
+
+/* ANALYZER */
+.analyzer-wrap{position:relative;z-index:1;max-width:740px;margin:0 auto;padding:0 1.5rem 4rem;animation:fadeUp 0.6s 0.4s ease both}
+.analyzer-card{background:#fff;border:2px solid var(--border2);border-radius:24px;overflow:hidden;box-shadow:0 8px 40px rgba(91,82,232,0.10)}
+.card-header{padding:1.1rem 1.5rem;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#fafbff,#f0f2ff)}
+.dot{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.card-title{margin-left:auto;font-size:12px;color:var(--text3);font-weight:600;letter-spacing:0.04em}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border);overflow-x:auto;background:#fafbff}
+.tab{flex:1;min-width:110px;padding:13px 8px;text-align:center;font-size:13px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;font-family:var(--font-b);transition:all 0.2s;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;letter-spacing:0.01em}
+.tab:hover{color:var(--accent);background:rgba(91,82,232,0.04)}
+.tab.active{color:#fff;background:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+.input-zone{padding:1.25rem 1.5rem}
+.input-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:block;font-weight:700}
+textarea,.text-input{width:100%;background:var(--bg3);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--font-b);font-size:14px;padding:12px 14px;transition:border-color 0.2s}
+textarea{min-height:120px;resize:none;line-height:1.6}
+.text-input{height:48px}
+textarea:focus,.text-input:focus{outline:none;border-color:var(--accent);background:#fff}
+textarea::placeholder,.text-input::placeholder{color:var(--text3)}
+.quick-examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ex-chip{font-size:11px;padding:5px 12px;border-radius:8px;border:2px solid var(--border2);color:var(--accent);background:#fff;cursor:pointer;font-family:var(--font-b);font-weight:600;transition:all 0.15s}
+.ex-chip:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed var(--border2);border-radius:14px;padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--bg3)}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:#ede9ff}
+.drop-zone-icon{font-size:38px;margin-bottom:10px}
+.drop-zone-text{font-size:14px;color:var(--text2);margin-bottom:4px;font-weight:600}
+.drop-zone-sub{font-size:12px;color:var(--text3)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.image-preview{margin-top:12px;position:relative;display:inline-block}
+.image-preview img{max-height:180px;max-width:100%;border-radius:10px;border:2px solid var(--border2);display:block}
+.img-remove{position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--danger);border:none;border-radius:50%;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.paste-hint{margin-top:10px;font-size:12px;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:6px}
+.paste-key{background:#fff;border:2px solid var(--border2);border-radius:5px;padding:1px 7px;font-family:monospace;font-size:11px;color:var(--text2);font-weight:600}
+
+/* FOOTER BAR */
+.card-footer{padding:1rem 1.5rem;border-top:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#fafbff}
+.usage-info{font-size:12px;color:var(--text3);font-weight:600}
+.usage-bar{height:4px;background:var(--bg3);border-radius:4px;width:90px;margin-top:5px;border:1px solid var(--border)}
+.usage-fill{height:100%;background:var(--accent);border-radius:4px;transition:width 0.3s}
+.analyze-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:11px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);display:flex;align-items:center;gap:8px;transition:all 0.2s;white-space:nowrap;box-shadow:0 4px 15px rgba(91,82,232,0.3);letter-spacing:0.01em}
+.analyze-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.analyze-btn:active{transform:scale(0.98)}
+.analyze-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
+.limit-banner{margin:0 1.5rem 1.5rem;padding:12px 16px;background:var(--danger-bg);border:2px solid rgba(229,62,106,0.2);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:1rem;font-size:13px;color:var(--danger);font-weight:600}
+.upgrade-btn{background:var(--danger);color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-b);white-space:nowrap}
+
+/* RESULTS */
+#resultSection{padding:0 1.5rem 1.5rem}
+.loading-bar{height:4px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:1.5rem}
+.loading-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;animation:loadAnim 1.5s ease infinite}
+@keyframes loadAnim{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+.result-card{border-radius:16px;overflow:hidden;border:2px solid var(--border2);animation:fadeUp 0.4s ease;box-shadow:0 4px 20px rgba(0,0,0,0.06)}
+.result-header{padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px}
+.result-icon{font-size:32px}
+.result-verdict{font-family:var(--font-d);font-size:24px;font-weight:800}
+.result-sub{font-size:13px;margin-top:2px;font-weight:500}
+.risk-badge{margin-left:auto;text-align:center;background:rgba(255,255,255,0.6);border-radius:12px;padding:10px 18px;border:2px solid rgba(255,255,255,0.8)}
+.risk-num{font-family:var(--font-d);font-size:30px;font-weight:800;line-height:1}
+.risk-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-top:2px;font-weight:700}
+.result-body{padding:1.25rem 1.5rem;background:#fafbff;border-top:2px solid var(--border)}
+.result-section-title{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);font-weight:700;margin-bottom:8px}
+.result-analysis{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.25rem}
+.signals{display:flex;flex-direction:column;gap:6px}
+.signal{display:flex;align-items:flex-start;gap:10px;background:#fff;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px}
+.sig-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.sig-text{color:var(--text2);line-height:1.5;font-weight:500}
+.result-safe .result-header{background:var(--safe-bg)}
+.result-safe .result-verdict{color:var(--safe)}
+.result-warn .result-header{background:var(--warn-bg)}
+.result-warn .result-verdict{color:var(--warn)}
+.result-danger .result-header{background:var(--danger-bg)}
+.result-danger .result-verdict{color:var(--danger)}
+
+/* PRICING */
+.section{position:relative;z-index:1;padding:5rem 2rem;max-width:1100px;margin:0 auto}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);font-weight:700;text-align:center;margin-bottom:10px}
+.section-title{font-family:var(--font-d);font-size:clamp(28px,4vw,42px);font-weight:800;text-align:center;letter-spacing:-0.02em;margin-bottom:0.5rem;color:var(--text)}
+.section-sub{text-align:center;color:var(--text2);font-size:16px;margin-bottom:3rem}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.25rem;max-width:920px;margin:0 auto}
+.pricing-card{background:#fff;border:2px solid var(--border);border-radius:24px;padding:2rem;position:relative;transition:transform 0.2s,box-shadow 0.2s}
+.pricing-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(91,82,232,0.12)}
+.pricing-card.popular{border-color:var(--pro-color);box-shadow:0 8px 30px rgba(91,82,232,0.15)}
+.pricing-card.biz{border-color:var(--biz-color)}
+.popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:11px;font-weight:700;padding:5px 16px;border-radius:100px;letter-spacing:0.06em;white-space:nowrap}
+.pricing-name{font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:6px}
+.pricing-name.free-name{color:var(--free-color)}
+.pricing-name.pro-name{color:var(--pro-color)}
+.pricing-name.biz-name{color:var(--biz-color)}
+.pricing-price{font-family:var(--font-d);font-size:44px;font-weight:800;line-height:1;margin-bottom:4px}
+.pricing-price.free-price{color:var(--free-color)}
+.pricing-price.pro-price{color:var(--pro-color)}
+.pricing-price.biz-price{color:var(--biz-color)}
+.pricing-price span{font-size:16px;font-weight:500;color:var(--text3)}
+.pricing-desc{font-size:13px;color:var(--text3);margin-bottom:1.5rem;font-weight:500}
+.pricing-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:1.5rem}
+.pricing-features li{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:9px;font-weight:500}
+.pricing-features li::before{content:'✓';font-weight:800;flex-shrink:0}
+.pricing-features li.free-check::before{color:var(--free-color)}
+.pricing-features li.pro-check::before{color:var(--pro-color)}
+.pricing-features li.biz-check::before{color:var(--biz-color)}
+.pricing-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:all 0.2s;letter-spacing:0.01em}
+.pricing-btn-free{background:#f3f4f6;border:2px solid #e5e7eb;color:var(--free-color)}
+.pricing-btn-free:hover{background:#e5e7eb}
+.pricing-btn-pro{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;box-shadow:0 4px 15px rgba(91,82,232,0.3)}
+.pricing-btn-pro:hover{opacity:0.9}
+.pricing-btn-biz{background:linear-gradient(135deg,#e53e6a,#ff6b8a);border:none;color:#fff;box-shadow:0 4px 15px rgba(229,62,106,0.3)}
+.pricing-btn-biz:hover{opacity:0.9}
+
+/* HISTORY */
+.history-section{position:relative;z-index:1;max-width:740px;margin:0 auto;padding:0 1.5rem 3rem}
+.history-title{font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:1rem;color:var(--text)}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;font-size:13px}
+.h-verdict{font-weight:700;font-size:11px;padding:4px 10px;border-radius:8px;flex-shrink:0}
+.h-scam{background:var(--danger-bg);color:var(--danger)}
+.h-suspicious{background:var(--warn-bg);color:var(--warn)}
+.h-legitimate{background:var(--safe-bg);color:var(--safe)}
+.h-text{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.h-date{color:var(--text3);flex-shrink:0;font-weight:500}
+
+footer{position:relative;z-index:1;border-top:2px solid var(--border);padding:2rem;text-align:center;font-size:13px;color:var(--text3);font-weight:500}
+footer a{color:var(--text3);text-decoration:none}
+footer a:hover{color:var(--accent)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.hero-stats{gap:1rem}.card-footer{flex-direction:column;align-items:stretch}.analyze-btn{justify-content:center}.hero h1{font-size:36px}}
 </style>
 </head>
 <body>
-<div class="orb orb1"></div>
-<div class="orb orb2"></div>
 
+<!-- AUTH MODAL -->
 <div class="overlay" id="authOverlay">
   <div class="modal">
     <button class="modal-close" onclick="closeAuth()">✕</button>
     <h2>🛡 ScamShield</h2>
-    <p>Create a free account to start analyzing messages.</p>
+    <p id="auth-desc">Create a free account to start protecting yourself.</p>
     <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchAuth('login',this)">Sign in</button>
-      <button class="modal-tab" onclick="switchAuth('signup',this)">Sign up</button>
+      <button class="modal-tab active" onclick="switchAuth('login',this)" data-en="Sign in" data-fr="Connexion" data-es="Iniciar sesión">Sign in</button>
+      <button class="modal-tab" onclick="switchAuth('signup',this)" data-en="Sign up" data-fr="Inscription" data-es="Registrarse">Sign up</button>
     </div>
     <div id="auth-login">
-      <div class="form-group"><label>Email</label><input class="form-input" type="email" id="login-email" placeholder="you@example.com"></div>
-      <div class="form-group"><label>Password</label><input class="form-input" type="password" id="login-password" placeholder="••••••••"></div>
-      <button class="btn-full" onclick="doLogin()">Sign in →</button>
+      <div class="form-group"><label data-en="Email" data-fr="E-mail" data-fr="E-mail" data-es="Correo">Email</label><input class="form-input" type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label data-en="Password" data-fr="Mot de passe" data-fr="Mot de passe" data-es="Contraseña">Password</label><input class="form-input" type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="btn-full" onclick="doLogin()" data-en="Sign in →" data-fr="Se connecter →" data-es="Iniciar sesión →">Sign in →</button>
       <div class="modal-error" id="login-error"></div>
     </div>
     <div id="auth-signup" style="display:none">
-      <div class="form-group"><label>Email</label><input class="form-input" type="email" id="signup-email" placeholder="you@example.com"></div>
-      <div class="form-group"><label>Password</label><input class="form-input" type="password" id="signup-password" placeholder="Min. 6 characters"></div>
-      <button class="btn-full" onclick="doSignup()">Create free account →</button>
+      <div class="form-group"><label data-en="Email" data-fr="E-mail" data-es="Correo">Email</label><input class="form-input" type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label data-en="Password" data-fr="Mot de passe" data-es="Contraseña">Password</label><input class="form-input" type="password" id="signup-password" placeholder="Min. 6 characters"></div>
+      <button class="btn-full" onclick="doSignup()" data-en="Create free account →" data-fr="Créer un compte gratuit →" data-es="Crear cuenta gratis →">Create free account →</button>
       <div class="modal-error" id="signup-error"></div>
       <div class="modal-success" id="signup-success"></div>
     </div>
   </div>
 </div>
 
+<!-- UPGRADE MODAL -->
 <div class="overlay" id="upgradeOverlay">
   <div class="modal" style="max-width:480px">
     <button class="modal-close" onclick="document.getElementById('upgradeOverlay').classList.remove('show')">✕</button>
-    <h2>⚡ Upgrade your plan</h2>
-    <p>You've reached your daily limit. Upgrade for unlimited analyses.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:1rem">
-      <div style="background:var(--bg3);border:1px solid rgba(108,99,255,0.3);border-radius:12px;padding:1.25rem">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-family:var(--font-d);font-size:17px;font-weight:700">Pro</div>
-          <div style="font-family:var(--font-d);font-size:22px;font-weight:700">$9.99<span style="font-size:13px;font-weight:400;color:var(--text2)">/mo</span></div>
-        </div>
-        <ul style="list-style:none;font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:6px;margin-bottom:1rem">
-          <li>✓ Unlimited analyses</li><li>✓ Screenshot analysis</li><li>✓ Full history</li>
-        </ul>
-        <button class="btn-full" onclick="startCheckout('pro')" style="margin-top:0">Get Pro →</button>
+    <h2>⚡ <span data-en="Upgrade your plan" data-fr="Améliorez votre abonnement" data-es="Mejora tu plan">Upgrade your plan</span></h2>
+    <p data-en="You've reached your daily limit. Upgrade for unlimited analyses." data-fr="Vous avez atteint votre limite quotidienne. Passez à la version supérieure pour des analyses illimitées." data-es="Has alcanzado tu límite diario. Actualiza para análisis ilimitados.">You've reached your daily limit. Upgrade for unlimited analyses.</p>
+    <div style="background:var(--bg3);border:2px solid rgba(91,82,232,0.2);border-radius:16px;padding:1.5rem;margin-top:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--pro-color)">Pro</div>
+        <div style="font-family:var(--font-d);font-size:26px;font-weight:800;color:var(--pro-color)">$9.99<span style="font-size:14px;font-weight:500;color:var(--text3)">/mo</span></div>
       </div>
+      <ul style="list-style:none;font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:7px;margin-bottom:1.2rem">
+        <li style="display:flex;gap:8px;align-items:center"><span style="color:var(--pro-color);font-weight:800">✓</span> <span data-en="Unlimited analyses" data-fr="Analyses illimitées" data-es="Análisis ilimitados">Unlimited analyses</span></li>
+        <li style="display:flex;gap:8px;align-items:center"><span style="color:var(--pro-color);font-weight:800">✓</span> <span data-en="Screenshot analysis" data-fr="Analyse de captures" data-es="Análisis de capturas">Screenshot analysis</span></li>
+        <li style="display:flex;gap:8px;align-items:center"><span style="color:var(--pro-color);font-weight:800">✓</span> <span data-en="Full history" data-fr="Historique complet" data-es="Historial completo">Full history</span></li>
+      </ul>
+      <button class="btn-full" onclick="startCheckout('pro')" style="margin-top:0" data-en="Get Pro →" data-fr="Obtenir Pro →" data-es="Obtener Pro →">Get Pro →</button>
     </div>
-    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:1rem">Stripe secure checkout · Cancel anytime</p>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:1rem" data-en="Stripe secure checkout · Cancel anytime" data-fr="Paiement sécurisé Stripe · Annulez à tout moment" data-es="Pago seguro con Stripe · Cancela cuando quieras">Stripe secure checkout · Cancel anytime</p>
   </div>
 </div>
 
+<!-- NAV -->
 <nav>
   <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
     <div class="logo-icon">🛡</div>ScamShield
   </div>
-  <div class="nav-right" id="navRight">
-    <button class="nav-btn" onclick="showAuth()">Sign in</button>
-    <button class="nav-btn nav-btn-primary" onclick="showAuth()">Get started free →</button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en',this)">🇺🇸 EN</button>
+      <button class="lang-btn" onclick="setLang('fr',this)">🇫🇷 FR</button>
+      <button class="lang-btn" onclick="setLang('es',this)">🇪🇸 ES</button>
+    </div>
+    <div class="nav-right" id="navRight">
+      <button class="nav-btn" onclick="showAuth()" data-en="Sign in" data-es="Iniciar sesión">Sign in</button>
+      <button class="nav-btn nav-btn-primary" onclick="showAuth()" data-en="Get started free →" data-es="Empezar gratis →">Get started free →</button>
+    </div>
   </div>
 </nav>
 
+<!-- HERO -->
 <div class="hero">
-  <div class="hero-badge"><div class="pulse"></div>AI-Powered Protection</div>
-  <h1>Don't get<br><span>scammed.</span></h1>
-  <p class="hero-sub">Analyze any suspicious message, email, URL or <strong style="color:var(--accent2);font-weight:500">screenshot</strong> with advanced AI. Available in 95+ languages.</p>
+  <div class="hero-badge"><div class="pulse"></div><span data-en="AI-Powered Protection" data-fr="Protection par IA" data-es="Protección con IA">AI-Powered Protection</span></div>
+  <h1><span data-en="Don't get" data-fr="Ne vous faites" data-es="No te dejes"></span><br><span class="highlight" data-en="scammed." data-fr="pas arnaquer." data-es="estafar.">scammed.</span></h1>
+  <p class="hero-sub" data-en="Instantly analyze any suspicious message, email, URL or screenshot with advanced AI — in 95+ languages." data-fr="Analysez instantanément tout message, e-mail, URL ou capture suspect avec l'IA — en plus de 95 langues." data-es="Analiza al instante cualquier mensaje, correo, URL o captura sospechosa con IA avanzada — en más de 95 idiomas.">Instantly analyze any suspicious message, email, URL or screenshot with advanced AI — in 95+ languages.</p>
   <div class="hero-stats">
-    <div class="stat-item"><div class="stat-num">99.2%</div><div class="stat-label">Accuracy</div></div>
-    <div class="stat-item"><div class="stat-num">&lt;3s</div><div class="stat-label">Analysis</div></div>
-    <div class="stat-item"><div class="stat-num">95+</div><div class="stat-label">Languages</div></div>
-    <div class="stat-item"><div class="stat-num">📸</div><div class="stat-label">Screenshots</div></div>
+    <div class="stat-item"><div class="stat-num">99.2%</div><div class="stat-label" data-en="Accuracy" data-fr="Précision" data-fr="Précision" data-es="Precisión">Accuracy</div></div>
+    <div class="stat-item"><div class="stat-num">&lt;3s</div><div class="stat-label" data-en="Analysis" data-fr="Analyse" data-fr="Analyse" data-es="Análisis">Analysis</div></div>
+    <div class="stat-item"><div class="stat-num">95+</div><div class="stat-label" data-en="Languages" data-fr="Langues" data-fr="Langues" data-es="Idiomas">Languages</div></div>
+    <div class="stat-item"><div class="stat-num">📸</div><div class="stat-label" data-en="Screenshots" data-fr="Captures" data-fr="Captures" data-es="Capturas">Screenshots</div></div>
   </div>
 </div>
 
+<!-- ANALYZER -->
 <div class="analyzer-wrap">
   <div class="analyzer-card">
     <div class="card-header">
@@ -249,34 +299,36 @@
       <span class="card-title">ScamShield AI — v3.0</span>
     </div>
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('message',this)">💬 Message</button>
-      <button class="tab" onclick="switchTab('image',this)">📸 Screenshot</button>
+      <button class="tab active" onclick="switchTab('message',this)">💬 <span data-en="Message" data-fr="Message" data-fr="Message" data-es="Mensaje">Message</span></button>
+      <button class="tab" onclick="switchTab('image',this)">📸 <span data-en="Screenshot" data-fr="Capture" data-fr="Capture" data-es="Captura">Screenshot</span></button>
       <button class="tab" onclick="switchTab('url',this)">🔗 URL</button>
-      <button class="tab" onclick="switchTab('phone',this)">📞 Phone</button>
+      <button class="tab" onclick="switchTab('phone',this)">📞 <span data-en="Phone" data-fr="Téléphone" data-fr="Téléphone" data-es="Teléfono">Phone</span></button>
     </div>
+
     <div class="tab-panel active" id="tab-message">
       <div class="input-zone">
-        <label class="input-label">Paste the suspicious message</label>
+        <label class="input-label" data-en="Paste the suspicious message" data-fr="Collez le message suspect" data-es="Pega el mensaje sospechoso">Paste the suspicious message</label>
         <textarea id="msgInput" placeholder="Paste any SMS, email, WhatsApp or social media message here…"></textarea>
         <div class="quick-examples">
-          <span style="font-size:11px;color:var(--text3);align-self:center">Examples:</span>
-          <button class="ex-chip" onclick="loadEx(0)">Parcel scam</button>
-          <button class="ex-chip" onclick="loadEx(1)">Bank phishing</button>
-          <button class="ex-chip" onclick="loadEx(2)">Fake job offer</button>
-          <button class="ex-chip" onclick="loadEx(3)">Lottery scam</button>
-          <button class="ex-chip" onclick="loadEx(4)">Legit email</button>
+          <span style="font-size:11px;color:var(--text3);align-self:center;font-weight:600" data-en="Examples:" data-fr="Exemples :" data-fr="Exemples :" data-es="Ejemplos:">Examples:</span>
+          <button class="ex-chip" onclick="loadEx(0)" data-en="Parcel scam" data-fr="Arnaque colis" data-es="Estafa de paquete">Parcel scam</button>
+          <button class="ex-chip" onclick="loadEx(1)" data-en="Bank phishing" data-fr="Phishing bancaire" data-es="Phishing bancario">Bank phishing</button>
+          <button class="ex-chip" onclick="loadEx(2)" data-en="Fake job offer" data-fr="Fausse offre d'emploi" data-es="Oferta falsa">Fake job offer</button>
+          <button class="ex-chip" onclick="loadEx(3)" data-en="Lottery scam" data-fr="Arnaque loterie" data-es="Estafa de lotería">Lottery scam</button>
+          <button class="ex-chip" onclick="loadEx(4)" data-en="Legit email" data-fr="E-mail légitime" data-es="Email legítimo">Legit email</button>
         </div>
       </div>
     </div>
+
     <div class="tab-panel" id="tab-image">
       <div class="input-zone">
-        <label class="input-label">Upload or paste a screenshot</label>
+        <label class="input-label" data-en="Upload or paste a screenshot" data-fr="Téléchargez ou collez une capture" data-es="Sube o pega una captura">Upload or paste a screenshot</label>
         <div class="drop-zone" id="dropZone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
           <input type="file" id="imgFile" accept="image/*" onchange="onFileSelect(event)">
           <div id="dropContent">
             <div class="drop-zone-icon">📸</div>
-            <div class="drop-zone-text">Drop your screenshot here or click to browse</div>
-            <div class="drop-zone-sub">Supports PNG, JPG, WEBP — max 10MB</div>
+            <div class="drop-zone-text" data-en="Drop your screenshot here or click to browse" data-fr="Déposez votre capture ici ou cliquez pour parcourir" data-es="Suelta tu captura aquí o haz clic para buscar">Drop your screenshot here or click to browse</div>
+            <div class="drop-zone-sub" data-en="Supports PNG, JPG, WEBP — max 10MB" data-fr="Compatible PNG, JPG, WEBP — max 10 Mo" data-es="Compatible con PNG, JPG, WEBP — máx 10MB">Supports PNG, JPG, WEBP — max 10MB</div>
           </div>
           <div class="image-preview" id="imgPreview" style="display:none">
             <img id="imgPreviewEl" src="" alt="Preview">
@@ -285,285 +337,311 @@
         </div>
         <div class="paste-hint">
           <span class="paste-key">Ctrl</span>+<span class="paste-key">V</span>
-          <span style="color:var(--text3)">to paste a screenshot directly from clipboard</span>
+          <span data-en="to paste a screenshot directly from clipboard" data-fr="pour coller une capture depuis le presse-papiers" data-es="para pegar una captura desde el portapapeles">to paste a screenshot directly from clipboard</span>
         </div>
       </div>
     </div>
+
     <div class="tab-panel" id="tab-url">
       <div class="input-zone">
-        <label class="input-label">Enter the URL to check</label>
+        <label class="input-label" data-en="Enter the URL to check" data-fr="Entrez l'URL à vérifier" data-es="Ingresa la URL a verificar">Enter the URL to check</label>
         <input class="text-input" type="text" id="urlInput" placeholder="https://suspicious-link.xyz/claim-prize...">
       </div>
     </div>
+
     <div class="tab-panel" id="tab-phone">
       <div class="input-zone">
-        <label class="input-label">Enter the phone number</label>
-        <input class="text-input" type="text" id="phoneInput" placeholder="+1 555 123 4567 or +33 6 12 34 56 78">
+        <label class="input-label" data-en="Enter the phone number" data-fr="Entrez le numéro de téléphone" data-es="Ingresa el número de teléfono">Enter the phone number</label>
+        <input class="text-input" type="text" id="phoneInput" placeholder="+1 555 123 4567">
       </div>
     </div>
+
     <div class="card-footer">
       <div class="usage-info">
-        <span id="usageText">🌍 Supports all languages</span>
+        <span id="usageText">🌍 <span data-en="Supports all languages" data-fr="Tous les langages" data-es="Todos los idiomas">Supports all languages</span></span>
         <div class="usage-bar" id="usageBarWrap" style="display:none"><div class="usage-fill" id="usageFill"></div></div>
       </div>
-      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">🔍 Analyze now</button>
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">🔍 <span data-en="Analyze now" data-fr="Analyser maintenant" data-es="Analizar ahora">Analyze now</span></button>
     </div>
     <div id="limitBanner" style="display:none" class="limit-banner">
-      🚫 Daily limit reached (5/5)
-      <button class="upgrade-btn" onclick="showUpgrade()">Upgrade to Pro →</button>
+      🚫 <span data-en="Daily limit reached (5/5)" data-fr="Limite quotidienne atteinte (5/5)" data-es="Límite diario alcanzado (5/5)">Daily limit reached (5/5)</span>
+      <button class="upgrade-btn" onclick="showUpgrade()" data-en="Upgrade to Pro →" data-fr="Passer à Pro →" data-es="Mejorar a Pro →">Upgrade to Pro →</button>
     </div>
     <div id="resultSection"></div>
   </div>
 </div>
 
+<!-- HISTORY -->
 <div class="history-section" id="historySection" style="display:none">
-  <div class="history-title">📋 Recent analyses</div>
+  <div class="history-title">📋 <span data-en="Recent analyses" data-fr="Analyses récentes" data-es="Análisis recientes">Recent analyses</span></div>
   <div class="history-list" id="historyList"></div>
 </div>
 
+<!-- PRICING -->
 <div class="section" id="pricing">
-  <div class="section-label">Pricing</div>
-  <h2 class="section-title">Simple, transparent pricing</h2>
-  <p class="section-sub">Start free. Upgrade when you're ready.</p>
+  <div class="section-label" data-en="Pricing" data-fr="Tarifs" data-fr="Tarifs" data-es="Precios">Pricing</div>
+  <h2 class="section-title" data-en="Simple, transparent pricing" data-fr="Tarifs simples et transparents" data-es="Precios simples y transparentes">Simple, transparent pricing</h2>
+  <p class="section-sub" data-en="Start free. Upgrade when you're ready." data-fr="Commencez gratuitement. Passez à la version supérieure quand vous voulez." data-es="Empieza gratis. Actualiza cuando quieras.">Start free. Upgrade when you're ready.</p>
   <div class="pricing-grid">
     <div class="pricing-card">
-      <div class="pricing-name">Free</div>
-      <div class="pricing-price">$0 <span>/month</span></div>
-      <p class="pricing-desc">Perfect to get started</p>
-      <ul class="pricing-features"><li>5 analyses per day</li><li>Message, URL & phone</li><li>Screenshot analysis</li><li>All 95+ languages</li></ul>
-      <button class="pricing-btn pricing-btn-outline" onclick="showAuth()">Get started free</button>
+      <div class="pricing-name free-name">Free</div>
+      <div class="pricing-price free-price">$0 <span data-en="/month" data-fr="/mois" data-fr="/mois" data-es="/mes">/month</span></div>
+      <p class="pricing-desc" data-en="Perfect to get started" data-fr="Parfait pour commencer" data-es="Perfecto para empezar">Perfect to get started</p>
+      <ul class="pricing-features">
+        <li class="free-check" data-en="5 analyses per day" data-fr="5 analyses par jour" data-es="5 análisis por día">5 analyses per day</li>
+        <li class="free-check" data-en="Message, URL & phone" data-fr="Message, URL et téléphone" data-es="Mensaje, URL y teléfono">Message, URL & phone</li>
+        <li class="free-check" data-en="Screenshot analysis" data-es="Análisis de capturas">Screenshot analysis</li>
+        <li class="free-check" data-en="All 95+ languages" data-fr="Plus de 95 langues" data-es="Más de 95 idiomas">All 95+ languages</li>
+      </ul>
+      <button class="pricing-btn pricing-btn-free" onclick="showAuth()" data-en="Get started free" data-fr="Commencer gratuitement" data-es="Empezar gratis">Get started free</button>
     </div>
     <div class="pricing-card popular">
-      <div class="popular-badge">MOST POPULAR</div>
-      <div class="pricing-name">Pro</div>
-      <div class="pricing-price">$9.99 <span>/month</span></div>
-      <p class="pricing-desc">For individuals & families</p>
-      <ul class="pricing-features"><li>Unlimited analyses</li><li>Unlimited screenshots</li><li>Full history & export</li><li>Priority AI processing</li><li>Cancel anytime</li></ul>
-      <button class="pricing-btn pricing-btn-filled" onclick="startCheckout('pro')">Start Pro →</button>
+      <div class="popular-badge" data-en="MOST POPULAR" data-fr="LE PLUS POPULAIRE" data-es="MÁS POPULAR">MOST POPULAR</div>
+      <div class="pricing-name pro-name">Pro</div>
+      <div class="pricing-price pro-price">$9.99 <span data-en="/month" data-fr="/mois" data-es="/mes">/month</span></div>
+      <p class="pricing-desc" data-en="For individuals & families" data-fr="Pour les particuliers et familles" data-es="Para personas y familias">For individuals & families</p>
+      <ul class="pricing-features">
+        <li class="pro-check" data-en="Unlimited analyses" data-es="Análisis ilimitados">Unlimited analyses</li>
+        <li class="pro-check" data-en="Unlimited screenshots" data-fr="Captures illimitées" data-es="Capturas ilimitadas">Unlimited screenshots</li>
+        <li class="pro-check" data-en="Full history & export" data-fr="Historique complet et export" data-es="Historial completo y exportar">Full history & export</li>
+        <li class="pro-check" data-en="Priority AI processing" data-fr="Traitement IA prioritaire" data-es="IA prioritaria">Priority AI processing</li>
+        <li class="pro-check" data-en="Cancel anytime" data-fr="Annulez à tout moment" data-es="Cancela cuando quieras">Cancel anytime</li>
+      </ul>
+      <button class="pricing-btn pricing-btn-pro" onclick="startCheckout('pro')" data-en="Start Pro →" data-fr="Démarrer Pro →" data-es="Empezar Pro →">Start Pro →</button>
     </div>
-    <div class="pricing-card">
-      <div class="pricing-name">Business</div>
-      <div class="pricing-price">$49 <span>/month</span></div>
-      <p class="pricing-desc">For teams & companies</p>
-      <ul class="pricing-features"><li>Everything in Pro</li><li>REST API access</li><li>Team accounts (5 seats)</li><li>White-label option</li><li>Priority support & SLA</li></ul>
-      <button class="pricing-btn pricing-btn-outline" onclick="startCheckout('business')">Get Business →</button>
+    <div class="pricing-card biz">
+      <div class="pricing-name biz-name">Business</div>
+      <div class="pricing-price biz-price">$49 <span data-en="/month" data-fr="/mois" data-es="/mes">/month</span></div>
+      <p class="pricing-desc" data-en="For teams & companies" data-fr="Pour les équipes et entreprises" data-es="Para equipos y empresas">For teams & companies</p>
+      <ul class="pricing-features">
+        <li class="biz-check" data-en="Everything in Pro" data-fr="Tout ce qui est dans Pro" data-es="Todo lo de Pro">Everything in Pro</li>
+        <li class="biz-check" data-en="REST API access" data-fr="Accès API REST" data-es="Acceso a API REST">REST API access</li>
+        <li class="biz-check" data-en="Team accounts (5 seats)" data-fr="Comptes équipe (5 postes)" data-es="Cuentas de equipo (5)">Team accounts (5 seats)</li>
+        <li class="biz-check" data-en="White-label option" data-fr="Option marque blanche" data-es="Opción marca blanca">White-label option</li>
+        <li class="biz-check" data-en="Priority support & SLA" data-fr="Support prioritaire et SLA" data-es="Soporte prioritario y SLA">Priority support & SLA</li>
+      </ul>
+      <button class="pricing-btn pricing-btn-biz" onclick="startCheckout('business')" data-en="Get Business →" data-fr="Obtenir Business →" data-es="Obtener Business →">Get Business →</button>
     </div>
   </div>
 </div>
 
 <footer>
-  <p>© 2025 ScamShield AI — Protecting people worldwide 🌍</p>
-  <p style="margin-top:6px">Powered by Google Gemini AI · Built with Supabase · <a href="#" style="color:var(--text3);text-decoration:none">Privacy</a> · <a href="#" style="color:var(--text3);text-decoration:none">Terms</a></p>
+  <p>© 2025 ScamShield AI — <span data-en="Protecting people worldwide" data-fr="Protéger les gens dans le monde entier" data-es="Protegiendo personas en todo el mundo">Protecting people worldwide</span> 🌍</p>
+  <p style="margin-top:6px">Powered by Google Gemini AI · Built with Supabase · <a href="#" data-en="Privacy" data-es="Privacidad">Privacy</a> · <a href="#" data-en="Terms" data-es="Términos">Terms</a></p>
 </footer>
 
 <script>
-  const SUPABASE_URL = 'https://udrbvsqbviwhnmcosqzh.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcmJ2c3Fidml3aG5tY29zcXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTk1NTgsImV4cCI6MjA5NTEzNTU1OH0.bPp83sZnzyxRTqO_deHj-V0__UIDzxISFt2dFvoWLXY';
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+const SUPABASE_URL='https://udrbvsqbviwhnmcosqzh.supabase.co';
+const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcmJ2c3Fidml3aG5tY29zcXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTk1NTgsImV4cCI6MjA5NTEzNTU1OH0.bPp83sZnzyxRTqO_deHj-V0__UIDzxISFt2dFvoWLXY';
+const {createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_ANON);
 
-  const EXAMPLES = [
-    "Your parcel #FR2847391 is awaiting delivery. Customs fees of $2.99 are due. Pay now or your parcel will be returned: http://parcel-delivery-fees.xyz/pay",
-    "Dear customer, your Bank of America account has been suspended due to suspicious activity. Verify immediately: https://bankofamerica-secure-login.net/verify",
-    "Hi! We're hiring remote workers — $4,500/month guaranteed, 2h/day, no experience needed. Send your bank details and ID photo to start.",
-    "CONGRATULATIONS! You've won an iPhone 15 Pro! Call 0800-WIN-NOW within 48h to claim your prize or it will be forfeited.",
-    "Hi Sarah, confirming our meeting tomorrow at 2pm in the main conference room. I've sent the agenda. Let me know if you need anything. Best, Mark"
-  ];
+const EXAMPLES=[
+  "Your parcel #FR2847391 is awaiting delivery. Customs fees of $2.99 are due. Pay now or your parcel will be returned: http://parcel-delivery-fees.xyz/pay",
+  "Dear customer, your Bank of America account has been suspended due to suspicious activity. Verify immediately: https://bankofamerica-secure-login.net/verify",
+  "Hi! We're hiring remote workers — $4,500/month guaranteed, 2h/day, no experience needed. Send your bank details and ID photo to start.",
+  "CONGRATULATIONS! You've won an iPhone 15 Pro! Call 0800-WIN-NOW within 48h to claim your prize or it will be forfeited.",
+  "Hi Sarah, confirming our meeting tomorrow at 2pm in the main conference room. I've sent the agenda. Let me know if you need anything. Best, Mark"
+];
 
-  let currentUser=null, userProfile=null, activeTab='message', currentImageB64=null, currentImageMime=null;
+let currentUser=null,userProfile=null,activeTab='message',currentImageB64=null,currentImageMime=null,currentLang='en';
 
-  async function init() {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) await setUser(session.user);
-    sb.auth.onAuthStateChange(async (event, session) => {
-      if (session) await setUser(session.user); else clearUser();
+// LANGUAGE
+function setLang(lang,btn){
+  currentLang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')return;
+    const txt=el.getAttribute('data-'+lang);
+    if(txt)el.textContent=txt;
+  });
+}
+
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session)await setUser(session.user);
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(session)await setUser(session.user);else clearUser();
+  });
+  document.addEventListener('paste',handlePaste);
+}
+
+async function setUser(user){
+  currentUser=user;
+  const{data}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  userProfile=data;
+  updateNav();updateUsage();loadHistory();
+}
+
+function clearUser(){
+  currentUser=null;userProfile=null;
+  updateNav();updateUsage();
+  document.getElementById('historySection').style.display='none';
+}
+
+function updateNav(){
+  const nav=document.getElementById('navRight');
+  if(currentUser&&userProfile){
+    nav.innerHTML=`<div class="nav-user"><span>${currentUser.email.split('@')[0]}</span><span class="plan-badge badge-${userProfile.plan}">${userProfile.plan}</span></div><button class="nav-btn" onclick="doLogout()">Sign out</button>${userProfile.plan==='free'?`<button class="nav-btn nav-btn-primary" onclick="showUpgrade()">Upgrade ⚡</button>`:''}`;
+  }else{
+    nav.innerHTML=`<button class="nav-btn" onclick="showAuth()">Sign in</button><button class="nav-btn nav-btn-primary" onclick="showAuth()">Get started free →</button>`;
+  }
+}
+
+function updateUsage(){
+  const banner=document.getElementById('limitBanner'),btn=document.getElementById('analyzeBtn');
+  if(!userProfile){document.getElementById('usageText').textContent='🌍 Sign in for free account';document.getElementById('usageBarWrap').style.display='none';banner.style.display='none';btn.disabled=false;return;}
+  const today=new Date().toISOString().split('T')[0];
+  if(userProfile.last_reset!==today)userProfile.analyses_today=0;
+  if(userProfile.plan==='free'){
+    const used=userProfile.analyses_today||0,limit=5,pct=Math.min(100,(used/limit)*100);
+    document.getElementById('usageText').textContent=`${used}/${limit} analyses today`;
+    document.getElementById('usageBarWrap').style.display='block';
+    document.getElementById('usageFill').style.width=pct+'%';
+    document.getElementById('usageFill').style.background=pct>=100?'var(--danger)':'var(--accent)';
+    if(used>=limit){banner.style.display='flex';btn.disabled=true;}else{banner.style.display='none';btn.disabled=false;}
+  }else{
+    document.getElementById('usageText').textContent='✨ Unlimited analyses';
+    document.getElementById('usageBarWrap').style.display='none';
+    banner.style.display='none';btn.disabled=false;
+  }
+}
+
+async function loadHistory(){
+  if(!currentUser)return;
+  const{data}=await sb.from('analyses').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(5);
+  if(!data||!data.length)return;
+  document.getElementById('historySection').style.display='block';
+  document.getElementById('historyList').innerHTML=data.map(a=>{
+    const cls=a.verdict==='SCAM'?'h-scam':a.verdict==='SUSPICIOUS'?'h-suspicious':'h-legitimate';
+    return `<div class="history-item"><span class="h-verdict ${cls}">${a.verdict}</span><span class="h-text">${(a.input_text||'Screenshot').substring(0,60)}…</span><span class="h-date">${new Date(a.created_at).toLocaleDateString()}</span></div>`;
+  }).join('');
+}
+
+function showAuth(){document.getElementById('authOverlay').classList.add('show');}
+function closeAuth(){document.getElementById('authOverlay').classList.remove('show');}
+function showUpgrade(){document.getElementById('upgradeOverlay').classList.add('show');}
+
+function switchAuth(tab,el){
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  document.getElementById('auth-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('auth-signup').style.display=tab==='signup'?'block':'none';
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim(),password=document.getElementById('login-password').value;
+  const err=document.getElementById('login-error');err.style.display='none';
+  const{error}=await sb.auth.signInWithPassword({email,password});
+  if(error){err.textContent=error.message;err.style.display='block';}else closeAuth();
+}
+
+async function doSignup(){
+  const email=document.getElementById('signup-email').value.trim(),password=document.getElementById('signup-password').value;
+  const err=document.getElementById('signup-error'),suc=document.getElementById('signup-success');
+  err.style.display='none';suc.style.display='none';
+  const{error}=await sb.auth.signUp({email,password});
+  if(error){err.textContent=error.message;err.style.display='block';}
+  else{suc.textContent='✅ Account created! Check your email to confirm.';suc.style.display='block';}
+}
+
+async function doLogout(){await sb.auth.signOut();clearUser();}
+function startCheckout(plan){if(!currentUser){showAuth();return;}alert('Stripe coming soon!');}
+
+function switchTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('resultSection').innerHTML='';
+}
+
+function loadEx(i){document.getElementById('msgInput').value=EXAMPLES[i];switchTab('message',document.querySelectorAll('.tab')[0]);}
+
+function onDragOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
+function onDragLeave(e){document.getElementById('dropZone').classList.remove('dragover');}
+function onDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('dragover');const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/'))loadImageFile(file);}
+function onFileSelect(e){const file=e.target.files[0];if(file)loadImageFile(file);}
+function handlePaste(e){
+  const items=e.clipboardData?.items;if(!items)return;
+  for(const item of items){if(item.type.startsWith('image/')){switchTab('image',document.querySelectorAll('.tab')[1]);loadImageFile(item.getAsFile());break;}}
+}
+function loadImageFile(file){
+  if(file.size>10*1024*1024){alert('Image too large. Max 10MB.');return;}
+  currentImageMime=file.type;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    currentImageB64=e.target.result.split(',')[1];
+    document.getElementById('dropContent').style.display='none';
+    document.getElementById('imgPreviewEl').src=e.target.result;
+    document.getElementById('imgPreview').style.display='inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage(e){
+  e.stopPropagation();currentImageB64=null;currentImageMime=null;
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('dropContent').style.display='block';
+  document.getElementById('imgFile').value='';
+}
+
+async function analyze(){
+  if(!currentUser){showAuth();return;}
+  let content='',isImage=false;
+  if(activeTab==='message')content=document.getElementById('msgInput').value.trim();
+  else if(activeTab==='url')content=document.getElementById('urlInput').value.trim();
+  else if(activeTab==='phone')content=document.getElementById('phoneInput').value.trim();
+  else if(activeTab==='image'){if(!currentImageB64){alert('Please upload or paste a screenshot first.');return;}isImage=true;}
+  if(!isImage&&!content)return;
+
+  const btn=document.getElementById('analyzeBtn');
+  btn.disabled=true;btn.innerHTML='⏳ Analyzing…';
+  document.getElementById('resultSection').innerHTML=`<div style="padding:0 1.5rem 1.5rem"><div class="loading-bar"><div class="loading-bar-fill"></div></div><div style="font-size:13px;color:var(--text3);text-align:center;font-weight:600">${isImage?'🔍 Reading screenshot with AI…':'🤖 AI is analyzing…'}</div></div>`;
+
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    const token=session?.access_token;
+    const res=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+      body:JSON.stringify({isImage,imageData:currentImageB64,imageMime:currentImageMime,content,activeTab})
     });
-    document.addEventListener('paste', handlePaste);
-  }
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    const raw=data.raw||'';
+    if(!raw)throw new Error('Empty AI response');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const jsonMatch=clean.match(/\{[\s\S]*\}/);
+    if(!jsonMatch)throw new Error('Bad AI response');
+    const r=JSON.parse(jsonMatch[0]);
 
-  async function setUser(user) {
-    currentUser = user;
-    const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    userProfile = data;
-    updateNav(); updateUsage(); loadHistory();
-  }
+    let cls='result-safe',icon='✅',color='var(--safe)';
+    if(r.verdict==='SCAM'){cls='result-danger';icon='🚨';color='var(--danger)';}
+    else if(r.verdict==='SUSPICIOUS'){cls='result-warn';icon='⚠️';color='var(--warn)';}
 
-  function clearUser() {
-    currentUser=null; userProfile=null;
-    updateNav(); updateUsage();
-    document.getElementById('historySection').style.display='none';
-  }
-
-  function updateNav() {
-    const nav = document.getElementById('navRight');
-    if (currentUser && userProfile) {
-      nav.innerHTML = `<div class="nav-user"><span>${currentUser.email.split('@')[0]}</span><span class="plan-badge badge-${userProfile.plan}">${userProfile.plan}</span></div><button class="nav-btn" onclick="doLogout()">Sign out</button>${userProfile.plan==='free'?`<button class="nav-btn nav-btn-primary" onclick="showUpgrade()">Upgrade ⚡</button>`:''}`;
-    } else {
-      nav.innerHTML = `<button class="nav-btn" onclick="showAuth()">Sign in</button><button class="nav-btn nav-btn-primary" onclick="showAuth()">Get started free →</button>`;
-    }
-  }
-
-  function updateUsage() {
-    const banner=document.getElementById('limitBanner'), btn=document.getElementById('analyzeBtn');
-    if (!userProfile) { document.getElementById('usageText').textContent='🌍 Sign in for free account'; document.getElementById('usageBarWrap').style.display='none'; banner.style.display='none'; btn.disabled=false; return; }
-    const today=new Date().toISOString().split('T')[0];
-    if (userProfile.last_reset!==today) userProfile.analyses_today=0;
-    if (userProfile.plan==='free') {
-      const used=userProfile.analyses_today||0, limit=5, pct=Math.min(100,(used/limit)*100);
-      document.getElementById('usageText').textContent=`${used}/${limit} analyses today`;
-      document.getElementById('usageBarWrap').style.display='block';
-      document.getElementById('usageFill').style.width=pct+'%';
-      document.getElementById('usageFill').style.background=pct>=100?'var(--danger)':'var(--accent)';
-      if (used>=limit){banner.style.display='flex';btn.disabled=true;} else {banner.style.display='none';btn.disabled=false;}
-    } else {
-      document.getElementById('usageText').textContent='✨ Unlimited analyses';
-      document.getElementById('usageBarWrap').style.display='none';
-      banner.style.display='none'; btn.disabled=false;
-    }
-  }
-
-  async function loadHistory() {
-    if (!currentUser) return;
-    const { data } = await sb.from('analyses').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(5);
-    if (!data||!data.length) return;
-    document.getElementById('historySection').style.display='block';
-    document.getElementById('historyList').innerHTML=data.map(a=>{
-      const cls=a.verdict==='SCAM'?'h-scam':a.verdict==='SUSPICIOUS'?'h-suspicious':'h-legitimate';
-      return `<div class="history-item"><span class="h-verdict ${cls}">${a.verdict}</span><span class="h-text">${(a.input_text||'Screenshot').substring(0,60)}…</span><span class="h-date">${new Date(a.created_at).toLocaleDateString()}</span></div>`;
+    const signalsHtml=(r.signals||[]).map(s=>{
+      const ic=s.type==='danger'?'🔴':s.type==='warning'?'🟡':'🟢';
+      return `<div class="signal"><span class="sig-icon">${ic}</span><span class="sig-text">${s.text}</span></div>`;
     }).join('');
+
+    document.getElementById('resultSection').innerHTML=`<div style="padding:0 1.5rem 1.5rem"><div class="result-card ${cls}"><div class="result-header"><span class="result-icon">${icon}</span><div><div class="result-verdict">${r.verdict}</div><div class="result-sub" style="color:${color}">${r.summary}</div></div><div class="risk-badge"><div class="risk-num" style="color:${color}">${r.score}</div><div class="risk-label">risk score</div></div></div><div class="result-body"><div class="result-section-title">Analysis</div><p class="result-analysis">${r.analysis}</p><div class="result-section-title">Signals detected</div><div class="signals">${signalsHtml}</div></div></div></div>`;
+
+    await sb.from('analyses').insert({user_id:currentUser.id,input_text:isImage?'[Screenshot]':content.substring(0,200),verdict:r.verdict,score:r.score,summary:r.summary});
+    const today=new Date().toISOString().split('T')[0];
+    const newCount=(userProfile.last_reset===today?userProfile.analyses_today:0)+1;
+    await sb.from('profiles').update({analyses_today:newCount,last_reset:today}).eq('id',currentUser.id);
+    userProfile.analyses_today=newCount;userProfile.last_reset=today;
+    loadHistory();
+  }catch(e){
+    document.getElementById('resultSection').innerHTML=`<div style="padding:0 1.5rem 1.5rem;font-size:14px;color:var(--danger);font-weight:600">❌ Error: ${e.message}</div>`;
   }
+  btn.disabled=false;btn.innerHTML='🔍 Analyze now';
+  updateUsage();
+}
 
-  function showAuth(){document.getElementById('authOverlay').classList.add('show');}
-  function closeAuth(){document.getElementById('authOverlay').classList.remove('show');}
-  function showUpgrade(){document.getElementById('upgradeOverlay').classList.add('show');}
-
-  function switchAuth(tab,el){
-    document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
-    document.getElementById('auth-login').style.display=tab==='login'?'block':'none';
-    document.getElementById('auth-signup').style.display=tab==='signup'?'block':'none';
-  }
-
-  async function doLogin(){
-    const email=document.getElementById('login-email').value.trim(), password=document.getElementById('login-password').value;
-    const err=document.getElementById('login-error'); err.style.display='none';
-    const {error}=await sb.auth.signInWithPassword({email,password});
-    if(error){err.textContent=error.message;err.style.display='block';}else closeAuth();
-  }
-
-  async function doSignup(){
-    const email=document.getElementById('signup-email').value.trim(), password=document.getElementById('signup-password').value;
-    const err=document.getElementById('signup-error'),suc=document.getElementById('signup-success');
-    err.style.display='none';suc.style.display='none';
-    const {error}=await sb.auth.signUp({email,password});
-    if(error){err.textContent=error.message;err.style.display='block';}
-    else{suc.textContent='✅ Account created! Check your email to confirm.';suc.style.display='block';}
-  }
-
-  async function doLogout(){await sb.auth.signOut();clearUser();}
-
-  function startCheckout(plan){if(!currentUser){showAuth();return;}alert('Stripe coming soon!');}
-
-  function switchTab(tab,el){
-    activeTab=tab;
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    el.classList.add('active'); document.getElementById('tab-'+tab).classList.add('active');
-    document.getElementById('resultSection').innerHTML='';
-  }
-
-  function loadEx(i){document.getElementById('msgInput').value=EXAMPLES[i];switchTab('message',document.querySelectorAll('.tab')[0]);}
-
-  function onDragOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
-  function onDragLeave(e){document.getElementById('dropZone').classList.remove('dragover');}
-  function onDrop(e){
-    e.preventDefault();document.getElementById('dropZone').classList.remove('dragover');
-    const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/'))loadImageFile(file);
-  }
-  function onFileSelect(e){const file=e.target.files[0];if(file)loadImageFile(file);}
-  function handlePaste(e){
-    const items=e.clipboardData?.items;if(!items)return;
-    for(const item of items){if(item.type.startsWith('image/')){switchTab('image',document.querySelectorAll('.tab')[1]);loadImageFile(item.getAsFile());break;}}
-  }
-  function loadImageFile(file){
-    if(file.size>10*1024*1024){alert('Image too large. Max 10MB.');return;}
-    currentImageMime=file.type;
-    const reader=new FileReader();
-    reader.onload=(e)=>{
-      currentImageB64=e.target.result.split(',')[1];
-      document.getElementById('dropContent').style.display='none';
-      document.getElementById('imgPreviewEl').src=e.target.result;
-      document.getElementById('imgPreview').style.display='inline-block';
-    };
-    reader.readAsDataURL(file);
-  }
-  function removeImage(e){
-    e.stopPropagation();currentImageB64=null;currentImageMime=null;
-    document.getElementById('imgPreview').style.display='none';
-    document.getElementById('dropContent').style.display='block';
-    document.getElementById('imgFile').value='';
-  }
-
-  async function analyze(){
-    if(!currentUser){showAuth();return;}
-    let content='',isImage=false;
-    if(activeTab==='message')content=document.getElementById('msgInput').value.trim();
-    else if(activeTab==='url')content=document.getElementById('urlInput').value.trim();
-    else if(activeTab==='phone')content=document.getElementById('phoneInput').value.trim();
-    else if(activeTab==='image'){if(!currentImageB64){alert('Please upload or paste a screenshot first.');return;}isImage=true;}
-    if(!isImage&&!content)return;
-
-    const btn=document.getElementById('analyzeBtn');
-    btn.disabled=true;btn.innerHTML='⏳ Analyzing…';
-    document.getElementById('resultSection').innerHTML=`<div style="padding:0 1.5rem 1.5rem"><div class="loading-bar"><div class="loading-bar-fill"></div></div><div style="font-size:13px;color:var(--text3);text-align:center">${isImage?'🔍 Reading screenshot with AI…':'AI is analyzing…'}</div></div>`;
-
-    try {
-      const {data:{session}}=await sb.auth.getSession();
-      const token=session?.access_token;
-
-      const res=await fetch('/api/analyze',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
-        body:JSON.stringify({isImage,imageData:currentImageB64,imageMime:currentImageMime,content,activeTab})
-      });
-
-      const data=await res.json();
-      if(data.error)throw new Error(data.error);
-
-      const raw=data.raw||'';
-      if(!raw)throw new Error('Empty AI response');
-      const clean=raw.replace(/```json|```/g,'').trim();
-      const jsonMatch=clean.match(/\{[\s\S]*\}/);
-      if(!jsonMatch)throw new Error('Bad AI response');
-      const r=JSON.parse(jsonMatch[0]);
-
-      let cls='result-safe',icon='✅',color='var(--safe)';
-      if(r.verdict==='SCAM'){cls='result-danger';icon='🚨';color='var(--danger)';}
-      else if(r.verdict==='SUSPICIOUS'){cls='result-warn';icon='⚠️';color='var(--warn)';}
-
-      const signalsHtml=(r.signals||[]).map(s=>{
-        const ic=s.type==='danger'?'🔴':s.type==='warning'?'🟡':'🟢';
-        return `<div class="signal"><span class="sig-icon">${ic}</span><span class="sig-text">${s.text}</span></div>`;
-      }).join('');
-
-      document.getElementById('resultSection').innerHTML=`<div style="padding:0 1.5rem 1.5rem"><div class="result-card ${cls}"><div class="result-header"><span class="result-icon">${icon}</span><div><div class="result-verdict">${r.verdict}</div><div class="result-sub" style="color:${color}">${r.summary}</div></div><div class="risk-badge"><div class="risk-num" style="color:${color}">${r.score}</div><div class="risk-label">risk score</div></div></div><div class="result-body"><div class="result-section-title">Analysis</div><p class="result-analysis">${r.analysis}</p><div class="result-section-title">Signals detected</div><div class="signals">${signalsHtml}</div></div></div></div>`;
-
-      await sb.from('analyses').insert({user_id:currentUser.id,input_text:isImage?'[Screenshot]':content.substring(0,200),verdict:r.verdict,score:r.score,summary:r.summary});
-      const today=new Date().toISOString().split('T')[0];
-      const newCount=(userProfile.last_reset===today?userProfile.analyses_today:0)+1;
-      await sb.from('profiles').update({analyses_today:newCount,last_reset:today}).eq('id',currentUser.id);
-      userProfile.analyses_today=newCount;userProfile.last_reset=today;
-      loadHistory();
-
-    } catch(e){
-      document.getElementById('resultSection').innerHTML=`<div style="padding:0 1.5rem 1.5rem;font-size:14px;color:var(--danger)">❌ Error: ${e.message}</div>`;
-    }
-    btn.disabled=false;btn.innerHTML='🔍 Analyze now';
-    updateUsage();
-  }
-
-  document.getElementById('authOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAuth();});
-  document.getElementById('upgradeOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('upgradeOverlay').classList.remove('show');});
-  init();
+document.getElementById('authOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAuth();});
+document.getElementById('upgradeOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('upgradeOverlay').classList.remove('show');});
+init();
 </script>
 </body>
 </html>
