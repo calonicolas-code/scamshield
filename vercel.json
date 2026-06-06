@@ -1,11 +1,11 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/*.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "functions": {
+    "api/api/analyze.js": {
+      "memory": 512,
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api/analyze", "destination": "/api/api/analyze" }
   ]
 }
