@@ -1,43 +1,102 @@
 export default async function handler(req, res) {
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
- 
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
- 
-  const { messages, isImage, imageData, imageMime, content, activeTab } = req.body;
- 
+
+  const { type, content, imageBase64 } = req.body;
+
+  if (!type || (!content && !imageBase64)) {
+    return res.status(400).json({ error: 'Missing type or content' });
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+
+  // Build the prompt based on type
+  const typeLabels = {
+    message: 'text message or email',
+    url: 'URL / website link',
+    phone: 'phone number',
+    screenshot: 'screenshot of a message or website'
+  };
+
+  const systemPrompt = `You are ScamShield AI, an expert scam detection system. Analyze the provided ${typeLabels[type] || 'content'} and respond ONLY with a valid JSON object — no markdown, no explanation outside the JSON.
+
+Return exactly this structure:
+{
+  "verdict": "scam" | "suspicious" | "legit",
+  "score": <integer 0-100 representing scam risk, 100 = definitely a scam>,
+  "label": "<short verdict label, e.g. '🚨 Scam Detected' or '✅ Looks Legitimate' or '⚠️ Suspicious'>",
+  "sub": "<one short sentence summarizing the verdict>",
+  "flags": [
+    { "type": "red" | "yellow" | "green", "text": "<short flag label>" }
+  ],
+  "summary": "<2-3 sentence plain-language explanation of why this is or isn't a scam, what to watch for, and what action to take>"
+}
+
+Rules:
+- "score" 80-100 = scam, 40-79 = suspicious, 0-39 = legit
+- Include 3-5 flags total mixing red (danger), yellow (caution), green (ok) as appropriate
+- Be concise and clear — the user may not be tech-savvy
+- If a phone number, assess whether it matches known scam patterns, premium numbers, or suspicious area codes
+- If a URL, check for typosquatting, suspicious TLDs, misleading subdomains, or phishing patterns
+- Always respond in the same language as the content analyzed`;
+
+  // Build message content
+  const userContent = imageBase64
+    ? [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+        { type: 'text', text: 'Analyze this screenshot for scam indicators.' }
+      ]
+    : [{ type: 'text', text: `Analyze this ${typeLabels[type]}:\n\n${content}` }];
+
   try {
-    const systemPrompt = `You are a world-class cybersecurity expert specializing in scam and fraud detection. ${isImage ? 'First read all text visible in the image, then analyze it for scam indicators.' : ''} Respond ONLY in valid JSON (no markdown, no backticks): {"verdict":"SCAM"|"SUSPICIOUS"|"LEGITIMATE","score":<0-100>,"summary":"<one sentence>","analysis":"<2-3 sentences>","signals":[{"type":"danger"|"warning"|"ok","text":"<signal>"}]} Detect: urgency tactics, suspicious links, requests for sensitive data, unrealistic promises, impersonation, social engineering. Give 2-5 signals. Respond in the same language as the content.`;
- 
-    let body;
-    if (isImage) {
-      body = { contents: [{ parts: [
-        { text: systemPrompt },
-        { inline_data: { mime_type: imageMime, data: imageData } }
-      ]}]};
-    } else {
-      body = { contents: [{ parts: [{ text: `${systemPrompt}\n\nAnalyze this ${activeTab}: ${content}` }] }]};
-    }
- 
-    const GEMINI_KEY = process.env.GEMINI_API_KEY;
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }]
+      })
     });
- 
+
+    if (!response.ok) {
+      const err = await response.json();
+      console.error('Claude API error:', err);
+      return res.status(502).json({ error: 'AI service error', details: err });
+    }
+
     const data = await response.json();
-    if (data.error) return res.status(500).json({ error: data.error.message });
- 
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return res.status(200).json({ raw });
- 
+    const raw = data.content?.[0]?.text || '';
+
+    // Parse JSON safely
+    let result;
+    try {
+      const cleaned = raw.replace(/```json|```/g, '').trim();
+      result = JSON.parse(cleaned);
+    } catch {
+      console.error('JSON parse failed:', raw);
+      return res.status(502).json({ error: 'Invalid AI response format' });
+    }
+
+    // Validate required fields
+    if (!result.verdict || result.score === undefined || !result.summary) {
+      return res.status(502).json({ error: 'Incomplete AI response' });
+    }
+
+    return res.status(200).json(result);
+
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error('Handler error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
- 
