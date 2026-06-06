@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
+console.log('ENV CHECK:', !!apiKey, Object.keys(process.env).filter(k => k.includes('ANTHROP')));
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   const typeLabels = {
