@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
   const prompt = `Analyze this ${type} for scams. Respond ONLY with JSON: {"verdict":"scam"|"suspicious"|"legit","score":0-100,"label":"string","sub":"string","flags":[{"type":"red"|"yellow"|"green","text":"string"}],"summary":"string"}. Content: ${content}`;
 
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${key}`, {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
