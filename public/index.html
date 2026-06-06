@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1021,6 +1022,63 @@
     transition: all 0.2s;
   }
 
+
+  /* ── USER AVATAR ── */
+  .user-avatar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .user-avatar.visible { display: flex; }
+  .avatar-circle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    border: 2px solid var(--border2);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+  .btn-signout {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-signout:hover { border-color: var(--red); color: var(--red); }
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: var(--radius);
+    color: #333;
+    font-size: 14px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  .btn-google:hover { background: #f8f8f8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .google-icon { width: 18px; height: 18px; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--text3); font-size: 12px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 640px) {
     .hero { padding: 120px 0 60px; }
@@ -1051,10 +1109,14 @@
       <button class="lang-btn" onclick="setLang('fr')" aria-pressed="false">🇫🇷 FR</button>
       <button class="lang-btn" onclick="setLang('es')" aria-pressed="false">🇪🇸 ES</button>
     </div>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links-auth">
       <button class="btn-ghost" onclick="scrollToPricing()">Pricing</button>
-      <button class="btn-ghost" onclick="openModal('auth')">Sign in</button>
-      <button class="btn-primary" onclick="openModal('auth')">Get started free →</button>
+      <button class="btn-ghost" id="nav-signin" onclick="openModal('auth')">Sign in</button>
+      <button class="btn-primary" id="nav-getstarted" onclick="openModal('auth')">Get started free →</button>
+      <div class="user-avatar" id="user-avatar">
+        <div class="avatar-circle" id="avatar-circle" onclick="openModal('auth')">?</div>
+        <button class="btn-signout" onclick="signOut()">Sign out</button>
+      </div>
     </div>
     <button class="hamburger" aria-label="Menu" onclick="openModal('auth')">
       <span></span><span></span><span></span>
@@ -1316,37 +1378,54 @@
 <div class="modal-overlay" id="modal-auth" role="dialog" aria-modal="true" aria-labelledby="auth-title" onclick="closeModalOutside(event, 'auth')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('auth')" aria-label="Close dialog">✕</button>
-    <div class="modal-title" id="auth-title">Welcome back 👋</div>
-    <p class="modal-sub">Create a free account to start protecting yourself.</p>
-    <div class="auth-tabs" role="tablist">
-      <button class="auth-tab active" role="tab" aria-selected="true" onclick="switchAuthTab('signin', this)">Sign in</button>
-      <button class="auth-tab" role="tab" aria-selected="false" onclick="switchAuthTab('signup', this)">Sign up</button>
+    <div id="auth-logged-out">
+      <div class="modal-title" id="auth-title">Welcome 👋</div>
+      <p class="modal-sub">Sign in to save your history and get 5 free analyses per day.</p>
+      <button class="btn-google" onclick="signInWithGoogle()">
+        <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div class="divider">or</div>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" role="tab" aria-selected="true" onclick="switchAuthTab('signin', this)">Sign in</button>
+        <button class="auth-tab" role="tab" aria-selected="false" onclick="switchAuthTab('signup', this)">Sign up</button>
+      </div>
+      <div id="auth-signin">
+        <div class="form-field">
+          <label class="form-label" for="signin-email">Email</label>
+          <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" autocomplete="email">
+          <div class="form-error" id="signin-email-err">Please enter a valid email address</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="signin-password">Password</label>
+          <input class="form-input" type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password">
+          <div class="form-error" id="signin-pass-err">Password must be at least 6 characters</div>
+        </div>
+        <button class="form-submit" onclick="submitAuth('signin')">Sign in →</button>
+      </div>
+      <div id="auth-signup" style="display:none;">
+        <div class="form-field">
+          <label class="form-label" for="signup-email">Email</label>
+          <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
+          <div class="form-error" id="signup-email-err">Please enter a valid email address</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="signup-password">Password</label>
+          <input class="form-input" type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password">
+          <div class="form-error" id="signup-pass-err">Password must be at least 6 characters</div>
+        </div>
+        <button class="form-submit" onclick="submitAuth('signup')">Create free account →</button>
+      </div>
     </div>
-    <div id="auth-signin">
-      <div class="form-field">
-        <label class="form-label" for="signin-email">Email</label>
-        <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" autocomplete="email">
-        <div class="form-error" id="signin-email-err">Please enter a valid email address</div>
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="signin-password">Password</label>
-        <input class="form-input" type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password">
-        <div class="form-error" id="signin-pass-err">Password must be at least 6 characters</div>
-      </div>
-      <button class="form-submit" onclick="submitAuth('signin')">Sign in →</button>
-    </div>
-    <div id="auth-signup" style="display:none;">
-      <div class="form-field">
-        <label class="form-label" for="signup-email">Email</label>
-        <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
-        <div class="form-error" id="signup-email-err">Please enter a valid email address</div>
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="signup-password">Password</label>
-        <input class="form-input" type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password">
-        <div class="form-error" id="signup-pass-err">Password must be at least 6 characters</div>
-      </div>
-      <button class="form-submit" onclick="submitAuth('signup')">Create free account →</button>
+    <div id="auth-logged-in" style="display:none;">
+      <div class="modal-title">You are signed in ✅</div>
+      <p class="modal-sub" id="auth-user-email" style="margin-bottom:24px;"></p>
+      <button class="form-submit" style="background:var(--red);" onclick="signOut(); closeModal('auth');">Sign out</button>
     </div>
   </div>
 </div>
@@ -1376,6 +1455,13 @@
 <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
 <script>
+// ── SUPABASE INIT ──
+const SUPABASE_URL = 'https://obiblkysmekknbymhyqb.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_CpNiYE2KmnjS6zQd_ERxrA_BEZkjqvH3oCr';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+
 // ── STATE ──
 const DAILY_LIMIT = 5;
 const STORAGE_KEY = 'scamshield_state';
@@ -1475,80 +1561,15 @@ function isValidPhone(val) {
 }
 
 // ── ANALYZE ──
-const SCAM_RESULTS = [
-  {
-    verdict: 'scam', score: 97, label: '🚨 Scam Detected',
-    sub: 'This message contains multiple high-risk indicators.',
-    flags: [
-      { type: 'red', text: 'Urgent payment demand' },
-      { type: 'red', text: 'Suspicious external link' },
-      { type: 'red', text: 'Impersonates legitimate brand' },
-      { type: 'red', text: 'Unusual domain name' }
-    ],
-    summary: 'This is a classic phishing attempt. The sender impersonates a trusted brand and creates artificial urgency to pressure you into clicking a malicious link and providing payment or personal information. Do not click any links.'
-  },
-  {
-    verdict: 'scam', score: 89, label: '🚨 Likely Scam',
-    sub: 'Strong indicators of fraudulent activity.',
-    flags: [
-      { type: 'red', text: 'Unsolicited contact' },
-      { type: 'red', text: 'Requests personal information' },
-      { type: 'yellow', text: 'Vague sender identity' }
-    ],
-    summary: 'This message has strong hallmarks of a scam. Legitimate organizations never ask for personal details, passwords, or payments via text or email out of the blue.'
-  }
-];
-
-const LEGIT_RESULTS = [
-  {
-    verdict: 'legit', score: 94, label: '✅ Looks Legitimate',
-    sub: 'No significant risk indicators detected.',
-    flags: [
-      { type: 'green', text: 'Consistent tone' },
-      { type: 'green', text: 'No suspicious links' },
-      { type: 'green', text: 'No payment requests' }
-    ],
-    summary: 'This message appears to be legitimate. It follows normal communication patterns with no requests for sensitive information or suspicious links. Always verify by contacting the sender directly if unsure.'
-  }
-];
-
-const SUSPICIOUS_RESULTS = [
-  {
-    verdict: 'suspicious', score: 55, label: '⚠️ Suspicious',
-    sub: 'Some risk indicators — proceed with caution.',
-    flags: [
-      { type: 'yellow', text: 'Unexpected message' },
-      { type: 'yellow', text: 'Requests action' },
-      { type: 'green', text: 'No obvious malicious links' }
-    ],
-    summary: 'While not definitively a scam, this message has some concerning elements. Exercise caution and verify the sender\'s identity through an official channel before taking any action.'
-  }
-];
-
-function pickResult(type, content) {
-  const text = (content || '').toLowerCase();
-  const scamWords = ['pay', 'urgent', 'verify', 'suspended', 'win', 'prize', 'fee', 'click', 'bank', 'account', 'confirm', 'limited', 'expire'];
-  const legitWords = ['appointment', 'reminder', 'schedule', 'confirm', 'dr.', 'dentist', 'thursday', 'friday'];
-  let scamScore = scamWords.filter(w => text.includes(w)).length;
-  let legitScore = legitWords.filter(w => text.includes(w)).length;
-  if (type === 'url') {
-    const suspicious = ['verify', 'secure', 'account', 'login', 'update', 'urgent', 'confirm'].some(w => text.includes(w));
-    scamScore += suspicious ? 3 : 0;
-  }
-  if (type === 'phone' || type === 'screenshot') scamScore += 1;
-  if (scamScore >= 3) return SCAM_RESULTS[Math.floor(Math.random() * SCAM_RESULTS.length)];
-  if (legitScore >= 2) return LEGIT_RESULTS[0];
-  if (scamScore >= 1) return SUSPICIOUS_RESULTS[0];
-  return Math.random() > 0.5 ? SCAM_RESULTS[0] : LEGIT_RESULTS[0];
-}
-
-function analyze(type) {
+async function analyze(type) {
   if (state.count >= DAILY_LIMIT) {
     openModal('upgrade');
     return;
   }
 
   let content = '';
+  let imageBase64 = null;
+
   if (type === 'message') content = document.getElementById('msg-input').value.trim();
   else if (type === 'url') content = document.getElementById('url-input').value.trim();
   else if (type === 'phone') {
@@ -1560,10 +1581,12 @@ function analyze(type) {
     document.getElementById('phone-error').style.display = 'none';
   }
   else if (type === 'screenshot') {
-    if (!document.getElementById('preview-img').src || document.getElementById('img-preview').style.display === 'none') {
+    const img = document.getElementById('preview-img');
+    if (!img.src || document.getElementById('img-preview').style.display === 'none') {
       showToast('Please upload or paste a screenshot first', 'error');
       return;
     }
+    imageBase64 = img.src.includes(',') ? img.src.split(',')[1] : null;
     content = 'screenshot';
   }
 
@@ -1578,17 +1601,30 @@ function analyze(type) {
   btn.disabled = true;
   document.getElementById('result-panel').classList.remove('show');
 
-  const delay = 1200 + Math.random() * 800;
-  setTimeout(() => {
-    const result = pickResult(type, content);
+  try {
+    const body = { type, content };
+    if (imageBase64) body.imageBase64 = imageBase64;
+
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Server error ' + response.status);
+    }
+
+    const result = await response.json();
+
     state.count++;
     state.date = new Date().toDateString();
 
-    // Add to history
     const histItem = {
       id: Date.now(),
       type,
-      text: type === 'screenshot' ? '📸 Screenshot' : content.slice(0, 60) + (content.length > 60 ? '…' : ''),
+      text: type === 'screenshot' ? '📸 Screenshot' : content.slice(0, 60) + (content.length > 60 ? '\u2026' : ''),
       verdict: result.verdict,
       score: result.score
     };
@@ -1599,14 +1635,19 @@ function analyze(type) {
     updateCounter();
     renderHistory();
     showResult(result, type);
-
-    btn.classList.remove('loading');
-    btn.disabled = false;
+    saveToCloud(type, content, result);
 
     if (state.count >= DAILY_LIMIT) {
       showToast('Daily limit reached — upgrade for unlimited analyses', 'info');
     }
-  }, delay);
+
+  } catch (err) {
+    console.error('Analysis error:', err);
+    showToast('Analysis failed: ' + err.message, 'error');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
 }
 
 // ── RENDER RESULT ──
@@ -1771,7 +1812,16 @@ function switchAuthTab(tab, btn) {
   document.getElementById('auth-signup').style.display = tab === 'signup' ? 'block' : 'none';
 }
 
-function submitAuth(type) {
+// ── SUPABASE AUTH ──
+async function signInWithGoogle() {
+  const { error } = await _supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) showToast('Google sign-in failed: ' + error.message, 'error');
+}
+
+async function submitAuth(type) {
   const emailEl = document.getElementById(type + '-email');
   const passEl  = document.getElementById(type + '-password');
   const emailErr = document.getElementById(type + '-email-err');
@@ -1784,9 +1834,107 @@ function submitAuth(type) {
     passErr.style.display = 'block'; valid = false;
   } else passErr.style.display = 'none';
   if (!valid) return;
+
+  let result;
+  if (type === 'signin') {
+    result = await _supabase.auth.signInWithPassword({ email: emailEl.value, password: passEl.value });
+  } else {
+    result = await _supabase.auth.signUp({ email: emailEl.value, password: passEl.value });
+  }
+  if (result.error) {
+    showToast(result.error.message, 'error');
+    return;
+  }
   closeModal('auth');
   showToast(type === 'signin' ? 'Signed in successfully! 👋' : 'Account created! Welcome to ScamShield 🛡', 'success');
 }
+
+async function signOut() {
+  await _supabase.auth.signOut();
+  currentUser = null;
+  updateAuthUI(null);
+  state.history = [];
+  saveState(state);
+  renderHistory();
+  showToast('Signed out', 'info');
+}
+
+function updateAuthUI(user) {
+  currentUser = user;
+  const avatar = document.getElementById('user-avatar');
+  const signin = document.getElementById('nav-signin');
+  const getstarted = document.getElementById('nav-getstarted');
+  const loggedIn = document.getElementById('auth-logged-in');
+  const loggedOut = document.getElementById('auth-logged-out');
+  const avatarCircle = document.getElementById('avatar-circle');
+  const authEmail = document.getElementById('auth-user-email');
+
+  if (user) {
+    avatar.classList.add('visible');
+    if (signin) signin.style.display = 'none';
+    if (getstarted) getstarted.style.display = 'none';
+    const name = user.user_metadata?.full_name || user.email || '';
+    const pic = user.user_metadata?.avatar_url;
+    if (pic) avatarCircle.innerHTML = '<img src="' + pic + '" alt="avatar">';
+    else avatarCircle.textContent = name.charAt(0).toUpperCase() || '?';
+    if (authEmail) authEmail.textContent = user.email;
+    if (loggedIn) loggedIn.style.display = 'block';
+    if (loggedOut) loggedOut.style.display = 'none';
+    loadCloudHistory();
+  } else {
+    avatar.classList.remove('visible');
+    if (signin) signin.style.display = '';
+    if (getstarted) getstarted.style.display = '';
+    if (loggedIn) loggedIn.style.display = 'none';
+    if (loggedOut) loggedOut.style.display = 'block';
+  }
+}
+
+// Load history from Supabase
+async function loadCloudHistory() {
+  if (!currentUser) return;
+  const { data, error } = await _supabase
+    .from('analyses')
+    .select('id, type, content, verdict, score, created_at')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+  if (error) { console.error('History load error:', error); return; }
+  if (data && data.length) {
+    state.history = data.map(r => ({
+      id: r.id,
+      type: r.type,
+      text: r.content ? r.content.slice(0, 60) + (r.content.length > 60 ? '\u2026' : '') : '\ud83d\udcf8 Screenshot',
+      verdict: r.verdict,
+      score: r.score
+    }));
+    saveState(state);
+    renderHistory();
+  }
+}
+
+// Save analysis to Supabase
+async function saveToCloud(type, content, result) {
+  if (!currentUser) return;
+  await _supabase.from('analyses').insert({
+    user_id: currentUser.id,
+    type,
+    content: content && content !== 'screenshot' ? content.slice(0, 500) : null,
+    verdict: result.verdict,
+    score: result.score,
+    label: result.label,
+    summary: result.summary,
+    flags: result.flags
+  });
+}
+
+// Init auth state
+_supabase.auth.getSession().then(({ data: { session } }) => {
+  updateAuthUI(session?.user || null);
+});
+_supabase.auth.onAuthStateChange((_event, session) => {
+  updateAuthUI(session?.user || null);
+});
 
 // ── NAVIGATION ──
 function scrollToPricing() {
