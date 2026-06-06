@@ -1,10 +1,4 @@
 {
-  "functions": {
-    "api/api/analyze.js": {
-      "memory": 512,
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/api/analyze", "destination": "/api/api/analyze" }
   ]
