@@ -1,1971 +1,1384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScamShield AI — Detect Scams Instantly</title>
-<meta name="description" content="Instantly analyze any suspicious message, email, URL or screenshot with advanced AI — in 50+ languages.">
-<meta property="og:title" content="ScamShield AI — Detect Scams Instantly">
-<meta property="og:description" content="AI-powered scam detection in 50+ languages. Analyze messages, URLs, phone numbers and screenshots instantly.">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamShield AI – Detect Scams Instantly</title>
+  <meta name="description" content="Instantly analyze any suspicious message, email, URL, or screenshot with advanced AI — in 50+ languages.">
+  <meta property="og:title" content="ScamShield AI – Detect Scams Instantly">
+  <meta property="og:description" content="AI-powered scam detection in 50+ languages.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  :root {
-    --bg: #070b12;
-    --bg2: #0d1220;
-    --bg3: #111827;
-    --bg4: #1a2235;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --text: #f0f4ff;
-    --text2: #8899bb;
-    --text3: #4a5a7a;
-    --accent: #3b7eff;
-    --accent2: #1a56cc;
-    --accent-glow: rgba(59,126,255,0.18);
-    --green: #22c55e;
-    --green-bg: rgba(34,197,94,0.1);
-    --red: #ef4444;
-    --red-bg: rgba(239,68,68,0.1);
-    --yellow: #f59e0b;
-    --yellow-bg: rgba(245,158,11,0.1);
-    --radius: 12px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
-    --font-display: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-    --shadow: 0 4px 32px rgba(0,0,0,0.5);
-  }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html { scroll-behavior: smooth; }
+    :root {
+      --bg: #070b12;
+      --bg2: #0d1220;
+      --bg3: #111827;
+      --bg4: #1a2235;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.12);
+      --text: #f0f4ff;
+      --text2: #8899bb;
+      --text3: #4a5a7a;
+      --accent: #3b7cff;
+      --accent2: #5b9aff;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --red2: #ff6b6b;
+      --glow: rgba(59,124,255,0.15);
+    }
 
-  body {
-    font-family: var(--font-body);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
+    html { scroll-behavior: smooth; }
 
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-  /* ── NOISE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.5;
-  }
+    /* BACKGROUND GRID */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,124,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,124,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  /* ── GLOW BG ── */
-  .glow-bg {
-    position: fixed;
-    top: -200px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 900px;
-    height: 600px;
-    background: radial-gradient(ellipse at center, rgba(59,126,255,0.12) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      background: rgba(7,11,18,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
 
-  /* ── LAYOUT ── */
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      text-decoration: none;
+    }
 
-  /* ── NAV ── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 0 24px;
-    background: rgba(7,11,18,0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--text);
-    text-decoration: none;
-  }
-  .logo-icon {
-    width: 34px; height: 34px;
-    background: var(--accent);
-    border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-  }
-  .nav-lang {
-    display: flex;
-    gap: 2px;
-    margin-right: 12px;
-  }
-  .lang-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text2);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .lang-btn.active, .lang-btn:hover {
-    background: var(--bg3);
-    border-color: var(--border2);
-    color: var(--text);
-  }
-  .btn-ghost {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text2);
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .btn-ghost:hover { background: var(--bg3); border-color: var(--border2); color: var(--text); }
-  .btn-primary {
-    background: var(--accent);
-    border: 1px solid transparent;
-    color: #fff;
-    padding: 8px 18px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .btn-primary:hover { background: #2d6de0; transform: translateY(-1px); }
-  .btn-primary:active { transform: translateY(0); }
+    .nav-logo svg {
+      width: 28px;
+      height: 28px;
+      color: var(--accent);
+    }
 
-  /* ── HERO ── */
-  .hero {
-    padding: 160px 0 80px;
-    text-align: center;
-  }
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 100px;
-    padding: 6px 14px;
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 32px;
-    letter-spacing: 0.02em;
-  }
-  .hero-badge-dot {
-    width: 7px; height: 7px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.85); }
-  }
-  .hero h1 {
-    font-family: var(--font-display);
-    font-size: clamp(46px, 7vw, 88px);
-    font-weight: 800;
-    line-height: 1.0;
-    letter-spacing: -0.03em;
-    margin-bottom: 10px;
-  }
-  .hero h1 .word-scammed {
-    display: block;
-    background: linear-gradient(135deg, #ef4444, #f97316);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero h1 .word-protect {
-    display: block;
-    background: linear-gradient(135deg, #3b7eff, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero-sub {
-    font-size: 18px;
-    color: var(--text2);
-    max-width: 520px;
-    margin: 24px auto 48px;
-    line-height: 1.7;
-    font-weight: 300;
-  }
-  .hero-stats {
-    display: flex;
-    justify-content: center;
-    gap: 48px;
-    flex-wrap: wrap;
-  }
-  .hero-stat strong {
-    display: block;
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .hero-stat span {
-    font-size: 13px;
-    color: var(--text2);
-  }
+    .nav-langs {
+      display: flex;
+      gap: 4px;
+    }
 
-  /* ── ANALYZER CARD ── */
-  .analyzer-wrap {
-    padding: 0 0 80px;
-  }
-  .analyzer-card {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    box-shadow: var(--shadow), 0 0 0 1px rgba(59,126,255,0.08);
-  }
-  .analyzer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg3);
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .analyzer-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 15px;
-  }
-  .live-dot {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--green);
-  }
-  .live-dot::before {
-    content: '';
-    width: 7px; height: 7px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-  .tab-bar {
-    display: flex;
-    gap: 4px;
-    padding: 16px 20px 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg2);
-    overflow-x: auto;
-  }
-  .tab-bar::-webkit-scrollbar { display: none; }
-  .tab {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 16px;
-    border-radius: 10px 10px 0 0;
-    font-size: 13px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    color: var(--text2);
-    background: none;
-    border: 1px solid transparent;
-    border-bottom: none;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-    position: relative;
-    bottom: -1px;
-  }
-  .tab:hover { color: var(--text); background: var(--bg3); }
-  .tab.active {
-    color: var(--text);
-    background: var(--bg3);
-    border-color: var(--border);
-    border-bottom-color: var(--bg3);
-  }
-  .tab-icon { font-size: 15px; }
+    .lang-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      font-size: 12px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
 
-  .analyzer-body { padding: 24px 20px; background: var(--bg3); }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(59,124,255,0.08);
+    }
 
-  /* panels */
-  .panel { display: none; }
-  .panel.active { display: block; }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-  /* message panel */
-  .input-area {
-    position: relative;
-    margin-bottom: 12px;
-  }
-  .input-area textarea {
-    width: 100%;
-    min-height: 140px;
-    resize: vertical;
-    background: var(--bg4);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    font-family: var(--font-body);
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.6;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .input-area textarea:focus { border-color: var(--accent); }
-  .input-area textarea::placeholder { color: var(--text3); }
+    .nav-link {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
 
-  .examples {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 16px;
-  }
-  .example-chip {
-    background: var(--bg4);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 5px 12px;
-    font-size: 12px;
-    color: var(--text2);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: var(--font-body);
-  }
-  .example-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
 
-  /* screenshot panel */
-  .drop-zone {
-    border: 2px dashed var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 48px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    background: var(--bg4);
-    margin-bottom: 12px;
-  }
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--accent);
-    background: var(--accent-glow);
-  }
-  .drop-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-  .drop-icon { font-size: 36px; margin-bottom: 10px; }
-  .drop-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
-  .drop-sub { font-size: 12px; color: var(--text2); }
-  .img-preview {
-    display: none;
-    position: relative;
-    margin-bottom: 12px;
-  }
-  .img-preview img {
-    width: 100%;
-    max-height: 260px;
-    object-fit: contain;
-    border-radius: var(--radius);
-    border: 1px solid var(--border2);
-    background: var(--bg4);
-  }
-  .img-preview-clear {
-    position: absolute;
-    top: 8px; right: 8px;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.7);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-  }
-  .img-preview-clear:hover { background: rgba(239,68,68,0.6); }
-  .paste-hint {
-    font-size: 12px;
-    color: var(--text3);
-    text-align: center;
-    padding: 8px;
-  }
-  kbd {
-    background: var(--bg4);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 11px;
-    font-family: var(--font-body);
-  }
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 80px 24px 60px;
+    }
 
-  /* url / phone panels */
-  .single-input {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .single-input input {
-    flex: 1;
-    background: var(--bg4);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-family: var(--font-body);
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
-    min-width: 0;
-  }
-  .single-input input:focus { border-color: var(--accent); }
-  .single-input input::placeholder { color: var(--text3); }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--green);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+    }
 
-  /* analyze footer */
-  .analyze-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .lang-badge {
-    font-size: 12px;
-    color: var(--text2);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-analyze {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    padding: 11px 24px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-analyze:hover { background: #2d6de0; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,126,255,0.3); }
-  .btn-analyze:active { transform: translateY(0); }
-  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-  .btn-analyze .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .btn-analyze.loading .spinner { display: block; }
-  .btn-analyze.loading .btn-text { display: none; }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
 
-  /* daily counter */
-  .daily-counter {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--text2);
-  }
-  .counter-bar {
-    width: 80px;
-    height: 4px;
-    background: var(--bg4);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .counter-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.3s;
-  }
-  .counter-fill.warning { background: var(--yellow); }
-  .counter-fill.danger { background: var(--red); }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
 
-  /* ── RESULT ── */
-  .result-panel {
-    display: none;
-    margin-top: 20px;
-    border-top: 1px solid var(--border);
-    padding-top: 20px;
-    animation: fadeUp 0.3s ease;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .result-panel.show { display: block; }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(38px, 7vw, 72px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.0;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff 0%, #8899bb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-  .verdict {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    border-radius: var(--radius-lg);
-    border: 1px solid;
-    margin-bottom: 16px;
-  }
-  .verdict.scam { background: var(--red-bg); border-color: rgba(239,68,68,0.3); }
-  .verdict.legit { background: var(--green-bg); border-color: rgba(34,197,94,0.3); }
-  .verdict.suspicious { background: var(--yellow-bg); border-color: rgba(245,158,11,0.3); }
-  .verdict-icon { font-size: 32px; flex-shrink: 0; }
-  .verdict-label {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-  }
-  .verdict.scam .verdict-label { color: var(--red); }
-  .verdict.legit .verdict-label { color: var(--green); }
-  .verdict.suspicious .verdict-label { color: var(--yellow); }
-  .verdict-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
-  .verdict-score {
-    margin-left: auto;
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .score-circle {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    border: 3px solid;
-  }
-  .verdict.scam .score-circle { border-color: var(--red); color: var(--red); }
-  .verdict.legit .score-circle { border-color: var(--green); color: var(--green); }
-  .verdict.suspicious .score-circle { border-color: var(--yellow); color: var(--yellow); }
-  .score-label { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-  .result-detail {
-    background: var(--bg4);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-  .result-section {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-  }
-  .result-section:last-child { border-bottom: none; }
-  .result-section-title {
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text3);
-    margin-bottom: 8px;
-  }
-  .flags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .flag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  .flag.red { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
-  .flag.green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
-  .flag.yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
-  .result-text { font-size: 14px; color: var(--text2); line-height: 1.7; }
-  .result-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 14px 18px;
-    border-top: 1px solid var(--border);
-  }
-  .btn-sm {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-sm:hover { color: var(--text); border-color: var(--border2); background: var(--bg4); }
+    .hero p {
+      max-width: 520px;
+      margin: 0 auto 40px;
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.7;
+    }
 
-  /* ── HISTORY ── */
-  .history-section {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    background: var(--bg2);
-  }
-  .history-title {
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text3);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .history-list { display: flex; flex-direction: column; gap: 6px; }
-  .history-empty {
-    font-size: 13px;
-    color: var(--text3);
-    text-align: center;
-    padding: 16px 0;
-  }
-  .history-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-    animation: fadeUp 0.2s ease;
-  }
-  .history-item:hover { border-color: var(--border2); background: var(--bg4); }
-  .history-badge {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .history-badge.scam { background: var(--red); }
-  .history-badge.legit { background: var(--green); }
-  .history-badge.suspicious { background: var(--yellow); }
-  .history-text {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text2);
-  }
-  .history-type {
-    font-size: 11px;
-    color: var(--text3);
-    flex-shrink: 0;
-  }
-  .history-clear {
-    font-size: 11px;
-    color: var(--text3);
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.15s;
-    font-family: var(--font-body);
-  }
-  .history-clear:hover { color: var(--red); }
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
 
-  /* ── PRICING ── */
-  .pricing-section {
-    padding: 80px 0;
-    scroll-margin-top: 80px;
-  }
-  .section-label {
-    text-align: center;
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    margin-bottom: 16px;
-  }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
-  }
-  .section-sub {
-    text-align: center;
-    font-size: 16px;
-    color: var(--text2);
-    margin-bottom: 56px;
-    font-weight: 300;
-  }
-  .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    align-items: start;
-  }
-  .plan-card {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-xl);
-    padding: 28px 24px;
-    transition: transform 0.2s, border-color 0.2s;
-    position: relative;
-  }
-  .plan-card:hover { transform: translateY(-4px); }
-  .plan-card.featured {
-    border-color: var(--accent);
-    background: linear-gradient(135deg, rgba(59,126,255,0.07), var(--bg2));
-    box-shadow: 0 0 0 1px var(--accent), 0 20px 60px rgba(59,126,255,0.12);
-  }
-  .plan-badge {
-    position: absolute;
-    top: -12px; left: 50%; transform: translateX(-50%);
-    background: var(--accent);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 14px;
-    border-radius: 100px;
-    white-space: nowrap;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .plan-name {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .plan-price {
-    font-family: var(--font-display);
-    font-size: 38px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin: 16px 0 4px;
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-  }
-  .plan-price sup {
-    font-size: 18px;
-    font-weight: 500;
-    margin-top: 6px;
-  }
-  .plan-price sub {
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text2);
-  }
-  .plan-desc { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
-  .plan-features { list-style: none; margin-bottom: 28px; }
-  .plan-features li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    font-size: 13px;
-    color: var(--text2);
-    border-bottom: 1px solid var(--border);
-  }
-  .plan-features li:last-child { border-bottom: none; }
-  .plan-features li .check { color: var(--green); font-size: 15px; flex-shrink: 0; }
-  .plan-features li .cross { color: var(--text3); font-size: 15px; flex-shrink: 0; }
-  .btn-plan {
-    width: 100%;
-    padding: 12px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid;
-  }
-  .btn-plan.outline {
-    background: none;
-    border-color: var(--border2);
-    color: var(--text);
-  }
-  .btn-plan.outline:hover { background: var(--bg3); }
-  .btn-plan.solid {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-  .btn-plan.solid:hover { background: #2d6de0; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,126,255,0.3); }
+    .stat {
+      text-align: center;
+    }
 
-  /* ── FOOTER ── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 32px 0;
-    text-align: center;
-    font-size: 13px;
-    color: var(--text3);
-  }
-  footer a { color: var(--text2); text-decoration: none; transition: color 0.15s; }
-  footer a:hover { color: var(--text); }
-  .footer-links { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 12px; }
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+    }
 
-  /* ── MODALS ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(6px);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-xl);
-    padding: 32px;
-    width: 100%;
-    max-width: 420px;
-    position: relative;
-    animation: modalIn 0.2s ease;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.96) translateY(8px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .modal-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text2);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-  }
-  .modal-close:hover { background: var(--bg4); color: var(--text); }
-  .modal-title {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .modal-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
-  .auth-tabs {
-    display: flex;
-    background: var(--bg3);
-    border-radius: var(--radius);
-    padding: 4px;
-    margin-bottom: 24px;
-  }
-  .auth-tab {
-    flex: 1;
-    padding: 8px;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: var(--text2);
-    transition: all 0.15s;
-  }
-  .auth-tab.active { background: var(--bg2); color: var(--text); border: 1px solid var(--border2); }
-  .form-field { margin-bottom: 16px; }
-  .form-label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
-  .form-input {
-    width: 100%;
-    background: var(--bg4);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 11px 14px;
-    font-family: var(--font-body);
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .form-input:focus { border-color: var(--accent); }
-  .form-input::placeholder { color: var(--text3); }
-  .form-error {
-    font-size: 12px;
-    color: var(--red);
-    margin-top: 5px;
-    display: none;
-  }
-  .form-submit {
-    width: 100%;
-    padding: 12px;
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius);
-    color: #fff;
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
-  }
-  .form-submit:hover { background: #2d6de0; }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+    }
 
-  /* toast */
-  .toast-container {
-    position: fixed;
-    bottom: 24px; right: 24px;
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    pointer-events: none;
-  }
-  .toast {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text);
-    box-shadow: var(--shadow);
-    animation: toastIn 0.3s ease;
-    max-width: 280px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .toast.success { border-left: 3px solid var(--green); }
-  .toast.error { border-left: 3px solid var(--red); }
-  .toast.info { border-left: 3px solid var(--accent); }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  @keyframes toastOut {
-    from { opacity: 1; transform: translateX(0); }
-    to   { opacity: 0; transform: translateX(20px); }
-  }
+    /* MAIN APP */
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto 60px;
+      padding: 0 20px;
+    }
 
-  /* mobile menu */
-  .hamburger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-  }
-  .hamburger span {
-    display: block;
-    width: 22px; height: 2px;
-    background: var(--text2);
-    border-radius: 2px;
-    transition: all 0.2s;
-  }
+    .app-card {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0,0,0,0.5), 0 0 100px var(--glow);
+    }
 
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+    }
 
-  /* ── USER AVATAR ── */
-  .user-avatar {
-    display: none;
-    align-items: center;
-    gap: 10px;
-  }
-  .user-avatar.visible { display: flex; }
-  .avatar-circle {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-    cursor: pointer;
-    border: 2px solid var(--border2);
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-  .btn-signout {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text2);
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-signout:hover { border-color: var(--red); color: var(--red); }
-  .btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 12px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: var(--radius);
-    color: #333;
-    font-size: 14px;
-    font-family: var(--font-body);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 8px;
-  }
-  .btn-google:hover { background: #f8f8f8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .google-icon { width: 18px; height: 18px; }
-  .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--text3); font-size: 12px; }
-  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
 
-  /* ── RESPONSIVE ── */
-  @media (max-width: 640px) {
-    .hero { padding: 120px 0 60px; }
-    .hero-stats { gap: 28px; }
-    .nav-lang { display: none; }
-    .nav-links .btn-ghost { display: none; }
-    .hamburger { display: flex; }
-    .analyze-footer { flex-direction: column; align-items: stretch; }
-    .btn-analyze { justify-content: center; }
-    .single-input { flex-direction: column; }
-    .modal { padding: 24px; }
-  }
-</style>
+    .app-title svg { color: var(--accent); }
+
+    .live-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--green);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 16px 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 18px;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); background: rgba(59,124,255,0.05); }
+    .tab .tab-icon { font-size: 16px; }
+
+    /* INPUT AREA */
+    .input-area {
+      padding: 24px;
+    }
+
+    .input-panel { display: none; }
+    .input-panel.active { display: block; }
+
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--text3); }
+
+    .url-input, .phone-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .url-input:focus, .phone-input:focus { border-color: var(--accent); }
+    .url-input::placeholder, .phone-input::placeholder { color: var(--text3); }
+
+    /* SCREENSHOT DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg3);
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(59,124,255,0.05);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .drop-icon { font-size: 36px; margin-bottom: 12px; }
+    .drop-text { color: var(--text2); font-size: 14px; }
+    .drop-hint { color: var(--text3); font-size: 12px; margin-top: 4px; }
+
+    .image-preview {
+      display: none;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .image-preview img {
+      width: 100%;
+      max-height: 240px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .image-preview .remove-img {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--border2);
+      border-radius: 50%;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .image-preview .remove-img:hover { background: var(--red); }
+
+    /* EXAMPLES */
+    .examples-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .examples-label {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .example-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .example-chip:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    /* BOTTOM BAR */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px 20px;
+      gap: 16px;
+    }
+
+    .bottom-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .auto-detect {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .usage-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .usage-bar-track {
+      width: 80px;
+      height: 3px;
+      background: var(--bg4);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .usage-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .usage-text {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .analyze-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .analyze-btn:hover:not(:disabled) {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(59,124,255,0.35);
+    }
+
+    .analyze-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .analyze-btn.loading .btn-label { display: none; }
+    .analyze-btn:not(.loading) .btn-spinner { display: none; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RESULT */
+    .result-area {
+      padding: 0 24px 24px;
+      display: none;
+    }
+
+    .result-area.visible { display: block; }
+
+    .result-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 20px;
+    }
+
+    .result-card {
+      background: var(--bg3);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .verdict-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    .verdict-SCAM { background: rgba(239,68,68,0.15); color: var(--red2); border: 1px solid rgba(239,68,68,0.3); }
+    .verdict-SUSPICIOUS { background: rgba(245,158,11,0.12); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+    .verdict-LEGITIMATE { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+
+    .risk-score-wrap {
+      text-align: right;
+    }
+
+    .risk-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .risk-number.high { color: var(--red2); }
+    .risk-number.medium { color: var(--yellow); }
+    .risk-number.low { color: var(--green); }
+
+    .risk-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    .result-body { padding: 20px; }
+
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .result-explanation {
+      color: var(--text2);
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .risk-bar {
+      height: 6px;
+      background: var(--bg4);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .risk-bar-fill.high { background: linear-gradient(90deg, #ef4444, #ff6b6b); }
+    .risk-bar-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .risk-bar-fill.low { background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+    .section-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    .flags-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .flag-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text2);
+      padding: 8px 12px;
+      background: rgba(239,68,68,0.06);
+      border-radius: 8px;
+      border-left: 3px solid rgba(239,68,68,0.4);
+    }
+
+    .flag-item .flag-icon { color: var(--red2); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    .advice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .advice-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text2);
+      padding: 8px 12px;
+      background: rgba(59,124,255,0.06);
+      border-radius: 8px;
+      border-left: 3px solid rgba(59,124,255,0.4);
+    }
+
+    .advice-num {
+      width: 18px;
+      height: 18px;
+      background: rgba(59,124,255,0.2);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent2);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .no-flags {
+      font-size: 13px;
+      color: var(--text3);
+      font-style: italic;
+    }
+
+    /* ERROR */
+    .error-msg {
+      display: none;
+      padding: 12px 16px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 10px;
+      color: var(--red2);
+      font-size: 13px;
+      margin: 0 24px 20px;
+    }
+    .error-msg.visible { display: block; }
+
+    /* RECENT ANALYSES */
+    .recent-section {
+      padding: 20px 24px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .recent-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .clear-btn:hover { color: var(--text2); }
+
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg3);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .recent-item:hover { border-color: var(--border2); }
+
+    .recent-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recent-verdict-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-SCAM { background: var(--red2); }
+    .dot-SUSPICIOUS { background: var(--yellow); }
+    .dot-LEGITIMATE { background: var(--green); }
+
+    .recent-text {
+      font-size: 13px;
+      color: var(--text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .recent-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .recent-type {
+      font-size: 11px;
+      color: var(--text3);
+      background: var(--bg4);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .recent-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--text2);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .nav-langs { display: none; }
+      .hero { padding: 50px 16px 40px; }
+      .stats-row { gap: 24px; }
+      .tabs { padding: 12px 16px 0; overflow-x: auto; }
+      .tab { padding: 8px 12px; font-size: 13px; }
+      .input-area, .bottom-bar, .recent-section { padding-left: 16px; padding-right: 16px; }
+      .result-area { padding-left: 16px; padding-right: 16px; }
+      .bottom-bar { flex-direction: column; align-items: stretch; }
+      .analyze-btn { width: 100%; justify-content: center; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="glow-bg" aria-hidden="true"></div>
-
 <!-- NAV -->
 <nav>
-  <div class="nav-inner">
-    <a href="#" class="logo">
-      <div class="logo-icon" aria-hidden="true">🛡</div>
-      ScamShield
-    </a>
-    <div class="nav-lang" role="group" aria-label="Language selector">
-      <button class="lang-btn active" onclick="setLang('en')" aria-pressed="true">🇺🇸 EN</button>
-      <button class="lang-btn" onclick="setLang('fr')" aria-pressed="false">🇫🇷 FR</button>
-      <button class="lang-btn" onclick="setLang('es')" aria-pressed="false">🇪🇸 ES</button>
-    </div>
-    <div class="nav-links" id="nav-links-auth">
-      <button class="btn-ghost" onclick="scrollToPricing()">Pricing</button>
-      <button class="btn-ghost" id="nav-signin" onclick="openModal('auth')">Sign in</button>
-      <button class="btn-primary" id="nav-getstarted" onclick="openModal('auth')">Get started free →</button>
-      <div class="user-avatar" id="user-avatar">
-        <div class="avatar-circle" id="avatar-circle" onclick="openModal('auth')">?</div>
-        <button class="btn-signout" onclick="signOut()">Sign out</button>
-      </div>
-    </div>
-    <button class="hamburger" aria-label="Menu" onclick="openModal('auth')">
-      <span></span><span></span><span></span>
-    </button>
+  <a href="/" class="nav-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    ScamShield
+  </a>
+  <div class="nav-langs">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('fr')">FR</button>
+    <button class="lang-btn" onclick="setLang('es')">ES</button>
+  </div>
+  <div class="nav-right">
+    <a href="#" class="nav-link" id="nav-pricing">Pricing</a>
+    <a href="#" class="nav-link" id="nav-signin">Sign in</a>
+    <a href="#" class="btn-primary" id="nav-cta">Get started free →</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="container">
-    <div class="hero-badge" role="status">
-      <div class="hero-badge-dot" aria-hidden="true"></div>
-      AI-Powered Protection · v3.0
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    <span id="hero-badge">AI-Powered Protection · v2.0</span>
+  </div>
+  <h1 id="hero-h1">Never get<br><em>scammed.</em></h1>
+  <p id="hero-p">Instantly analyze any suspicious message, email, URL, or screenshot with advanced AI — in 50+ languages.</p>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-val">99.2%</div>
+      <div class="stat-label" id="stat1">Accuracy</div>
     </div>
-    <h1>
-      <span class="word-scammed">Never get</span>
-      <span class="word-protect">scammed.</span>
-    </h1>
-    <p class="hero-sub">
-      Instantly analyze any suspicious message, email, URL or screenshot with advanced AI — in 50+ languages.
-    </p>
-    <div class="hero-stats" aria-label="Key statistics">
-      <div class="hero-stat">
-        <strong>99.2%</strong>
-        <span>Accuracy</span>
-      </div>
-      <div class="hero-stat">
-        <strong>&lt; 3s</strong>
-        <span>Analysis</span>
-      </div>
-      <div class="hero-stat">
-        <strong>50+</strong>
-        <span>Languages</span>
-      </div>
-      <div class="hero-stat">
-        <strong>2M+</strong>
-        <span>Scams blocked</span>
-      </div>
+    <div class="stat">
+      <div class="stat-val">&lt;3s</div>
+      <div class="stat-label" id="stat2">Analysis</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">50+</div>
+      <div class="stat-label" id="stat3">Languages</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">2M+</div>
+      <div class="stat-label" id="stat4">Scams blocked</div>
     </div>
   </div>
 </section>
 
-<!-- ANALYZER -->
-<section class="analyzer-wrap">
-  <div class="container">
-    <div class="analyzer-card" role="main" aria-label="Scam analyzer">
+<!-- MAIN APP -->
+<div class="app-wrapper">
+  <div class="app-card">
 
-      <!-- Card Header -->
-      <div class="analyzer-header">
-        <div class="analyzer-title">
-          🛡 ScamShield AI
-        </div>
-        <div class="live-dot" role="status" aria-label="Live protection active">Live protection</div>
+    <!-- APP HEADER -->
+    <div class="app-header">
+      <div class="app-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        ScamShield AI
       </div>
-
-      <!-- Tabs -->
-      <div class="tab-bar" role="tablist" aria-label="Analysis type">
-        <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-message" onclick="switchTab('message', this)">
-          <span class="tab-icon" aria-hidden="true">💬</span> Message
-        </button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-screenshot" onclick="switchTab('screenshot', this)">
-          <span class="tab-icon" aria-hidden="true">📸</span> Screenshot
-        </button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-url" onclick="switchTab('url', this)">
-          <span class="tab-icon" aria-hidden="true">🔗</span> URL
-        </button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-phone" onclick="switchTab('phone', this)">
-          <span class="tab-icon" aria-hidden="true">📞</span> Phone
-        </button>
+      <div class="live-status">
+        <div class="live-dot"></div>
+        <span id="live-label">Live protection</span>
       </div>
-
-      <!-- Body -->
-      <div class="analyzer-body">
-
-        <!-- Message Panel -->
-        <div id="panel-message" class="panel active" role="tabpanel">
-          <div class="input-area">
-            <textarea id="msg-input" placeholder="Paste the suspicious message here…" aria-label="Suspicious message text"></textarea>
-          </div>
-          <div class="examples" aria-label="Example messages">
-            <span style="font-size:12px; color: var(--text3); align-self: center;">Examples:</span>
-            <button class="example-chip" onclick="loadExample('parcel')">📦 Parcel scam</button>
-            <button class="example-chip" onclick="loadExample('bank')">🏦 Bank phishing</button>
-            <button class="example-chip" onclick="loadExample('job')">💼 Fake job offer</button>
-            <button class="example-chip" onclick="loadExample('lottery')">🎰 Lottery scam</button>
-            <button class="example-chip" onclick="loadExample('legit')">✅ Legit email</button>
-          </div>
-          <div class="analyze-footer">
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div class="lang-badge" aria-live="polite">🌍 Auto-detected language</div>
-              <div class="daily-counter" aria-label="Daily usage">
-                <div class="counter-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="5">
-                  <div class="counter-fill" id="counter-fill" style="width:0%"></div>
-                </div>
-                <span id="counter-text">0 / 5 today</span>
-              </div>
-            </div>
-            <button class="btn-analyze" id="btn-analyze-msg" onclick="analyze('message')">
-              <div class="spinner" aria-hidden="true"></div>
-              <span class="btn-text">🔍 Analyze now</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Screenshot Panel -->
-        <div id="panel-screenshot" class="panel" role="tabpanel">
-          <div class="img-preview" id="img-preview">
-            <img id="preview-img" src="" alt="Screenshot preview">
-            <button class="img-preview-clear" onclick="clearImage()" aria-label="Remove screenshot">✕</button>
-          </div>
-          <div class="drop-zone" id="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-            <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input" onchange="handleFile(event)" aria-label="Upload screenshot">
-            <div class="drop-icon" aria-hidden="true">📸</div>
-            <div class="drop-title">Drop your screenshot here or click to browse</div>
-            <div class="drop-sub">Supports PNG, JPG, WEBP — max 10MB</div>
-          </div>
-          <div class="paste-hint">Press <kbd>Ctrl+V</kbd> or <kbd>Cmd+V</kbd> to paste a screenshot directly</div>
-          <div class="analyze-footer" style="margin-top:16px;">
-            <div class="daily-counter" aria-label="Daily usage">
-              <div class="counter-bar">
-                <div class="counter-fill" id="counter-fill-2" style="width:0%"></div>
-              </div>
-              <span id="counter-text-2">0 / 5 today</span>
-            </div>
-            <button class="btn-analyze" id="btn-analyze-img" onclick="analyze('screenshot')">
-              <div class="spinner" aria-hidden="true"></div>
-              <span class="btn-text">🔍 Analyze screenshot</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- URL Panel -->
-        <div id="panel-url" class="panel" role="tabpanel">
-          <div class="single-input">
-            <input type="url" id="url-input" placeholder="https://suspicious-link.com/verify?token=..." aria-label="URL to check">
-          </div>
-          <div class="analyze-footer">
-            <div class="lang-badge">🔗 URL reputation check</div>
-            <button class="btn-analyze" id="btn-analyze-url" onclick="analyze('url')">
-              <div class="spinner" aria-hidden="true"></div>
-              <span class="btn-text">🔍 Check URL</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Phone Panel -->
-        <div id="panel-phone" class="panel" role="tabpanel">
-          <div class="single-input">
-            <input type="tel" id="phone-input" placeholder="+1 800 555 0123" aria-label="Phone number to check" pattern="^\+?[\d\s\-\(\)]{7,20}$">
-          </div>
-          <div id="phone-error" class="form-error">Please enter a valid phone number (e.g. +33 6 12 34 56 78)</div>
-          <div class="analyze-footer" style="margin-top:8px;">
-            <div class="lang-badge">📞 Phone number lookup</div>
-            <button class="btn-analyze" id="btn-analyze-phone" onclick="analyze('phone')">
-              <div class="spinner" aria-hidden="true"></div>
-              <span class="btn-text">🔍 Check number</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Result Panel -->
-        <div class="result-panel" id="result-panel" aria-live="polite" aria-label="Analysis result">
-          <!-- injected by JS -->
-        </div>
-
-      </div><!-- /body -->
-
-      <!-- History -->
-      <div class="history-section">
-        <div class="history-title">
-          <span>📋 Recent analyses</span>
-          <button class="history-clear" onclick="clearHistory()" aria-label="Clear history">Clear</button>
-        </div>
-        <div class="history-list" id="history-list">
-          <div class="history-empty">No analyses yet. Try one above!</div>
-        </div>
-      </div>
-
-    </div><!-- /analyzer-card -->
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="pricing-section" id="pricing">
-  <div class="container">
-    <p class="section-label">Pricing</p>
-    <h2 class="section-title">Simple, transparent pricing</h2>
-    <p class="section-sub">Start free. Upgrade when you're ready.</p>
-    <div class="pricing-grid">
-
-      <!-- Free -->
-      <div class="plan-card">
-        <div class="plan-name">Free</div>
-        <div class="plan-price"><sup>$</sup>0<sub>/month</sub></div>
-        <div class="plan-desc">Perfect to get started</div>
-        <ul class="plan-features">
-          <li><span class="check" aria-hidden="true">✓</span> 5 analyses per day</li>
-          <li><span class="check" aria-hidden="true">✓</span> Message, URL &amp; phone</li>
-          <li><span class="check" aria-hidden="true">✓</span> Screenshot analysis</li>
-          <li><span class="check" aria-hidden="true">✓</span> All 50+ languages</li>
-          <li><span class="cross" aria-hidden="true">–</span> History &amp; export</li>
-          <li><span class="cross" aria-hidden="true">–</span> Priority AI processing</li>
-        </ul>
-        <button class="btn-plan outline" onclick="scrollToAnalyzer()">Get started free</button>
-      </div>
-
-      <!-- Pro -->
-      <div class="plan-card featured">
-        <div class="plan-badge">Most Popular</div>
-        <div class="plan-name">Pro</div>
-        <div class="plan-price"><sup>$</sup>9.99<sub>/month</sub></div>
-        <div class="plan-desc">For individuals &amp; families</div>
-        <ul class="plan-features">
-          <li><span class="check" aria-hidden="true">✓</span> Unlimited analyses</li>
-          <li><span class="check" aria-hidden="true">✓</span> Unlimited screenshots</li>
-          <li><span class="check" aria-hidden="true">✓</span> Full history &amp; export</li>
-          <li><span class="check" aria-hidden="true">✓</span> Priority AI processing</li>
-          <li><span class="check" aria-hidden="true">✓</span> Cancel anytime</li>
-          <li><span class="check" aria-hidden="true">✓</span> Email alerts</li>
-        </ul>
-        <button class="btn-plan solid" onclick="openModal('upgrade')">Start Pro →</button>
-      </div>
-
-      <!-- Business -->
-      <div class="plan-card">
-        <div class="plan-name">Business</div>
-        <div class="plan-price"><sup>$</sup>49<sub>/month</sub></div>
-        <div class="plan-desc">For teams &amp; companies</div>
-        <ul class="plan-features">
-          <li><span class="check" aria-hidden="true">✓</span> Everything in Pro</li>
-          <li><span class="check" aria-hidden="true">✓</span> REST API access</li>
-          <li><span class="check" aria-hidden="true">✓</span> Team accounts (5 seats)</li>
-          <li><span class="check" aria-hidden="true">✓</span> White-label option</li>
-          <li><span class="check" aria-hidden="true">✓</span> Priority support &amp; SLA</li>
-          <li><span class="check" aria-hidden="true">✓</span> Custom integrations</li>
-        </ul>
-        <button class="btn-plan outline" onclick="openModal('upgrade')">Get Business →</button>
-      </div>
-
     </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('message')" id="tab-message">
+        <span class="tab-icon">💬</span> <span id="t-message">Message</span>
+      </button>
+      <button class="tab" onclick="switchTab('screenshot')" id="tab-screenshot">
+        <span class="tab-icon">🖼️</span> <span id="t-screenshot">Screenshot</span>
+      </button>
+      <button class="tab" onclick="switchTab('url')" id="tab-url">
+        <span class="tab-icon">🔗</span> <span id="t-url">URL</span>
+      </button>
+      <button class="tab" onclick="switchTab('phone')" id="tab-phone">
+        <span class="tab-icon">📞</span> <span id="t-phone">Phone</span>
+      </button>
+    </div>
+
+    <!-- INPUT PANELS -->
+    <div class="input-area">
+      <div class="input-panel active" id="panel-message">
+        <textarea id="msg-input" placeholder="Paste a suspicious message, email, SMS or text here…" rows="5"></textarea>
+        <div class="examples-row">
+          <span class="examples-label" id="ex-label">Examples:</span>
+          <span class="example-chip" onclick="loadExample('parcel')">📦 <span id="ex-parcel">Parcel scam</span></span>
+          <span class="example-chip" onclick="loadExample('bank')">🏦 <span id="ex-bank">Bank phishing</span></span>
+          <span class="example-chip" onclick="loadExample('job')">💼 <span id="ex-job">Fake job offer</span></span>
+          <span class="example-chip" onclick="loadExample('lottery')">🎰 <span id="ex-lottery">Lottery scam</span></span>
+          <span class="example-chip" onclick="loadExample('legit')">✅ <span id="ex-legit">Legit email</span></span>
+        </div>
+      </div>
+
+      <div class="input-panel" id="panel-screenshot">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+          <div class="drop-icon">📸</div>
+          <div class="drop-text" id="drop-text">Drop a screenshot here or click to upload</div>
+          <div class="drop-hint" id="drop-hint">PNG, JPG, WEBP · Max 10MB</div>
+        </div>
+        <div class="image-preview" id="image-preview">
+          <img id="preview-img" src="" alt="Preview">
+          <button class="remove-img" onclick="removeImage()">✕</button>
+        </div>
+      </div>
+
+      <div class="input-panel" id="panel-url">
+        <input type="url" class="url-input" id="url-input" placeholder="https://suspicious-link.com/offer/…">
+      </div>
+
+      <div class="input-panel" id="panel-phone">
+        <input type="tel" class="phone-input" id="phone-input" placeholder="+1 800 555 0100">
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bottom-left">
+        <div class="auto-detect">🌐 <span id="auto-detect-label">Auto-detected language</span></div>
+        <div class="usage-bar-wrap">
+          <div class="usage-bar-track">
+            <div class="usage-bar-fill" id="usage-fill" style="width: 20%"></div>
+          </div>
+          <span class="usage-text" id="usage-text">1 / 5 today</span>
+        </div>
+      </div>
+      <button class="analyze-btn" id="analyze-btn" onclick="analyze()">
+        <span class="btn-label" id="analyze-label">🔍 Analyze now</span>
+        <span class="btn-spinner"><div class="spinner"></div></span>
+      </button>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-msg" id="error-msg"></div>
+
+    <!-- RESULT -->
+    <div class="result-area" id="result-area">
+      <div class="result-divider"></div>
+      <div class="result-card" id="result-card">
+        <div class="result-header">
+          <div class="verdict-badge" id="verdict-badge"></div>
+          <div class="risk-score-wrap">
+            <div class="risk-number" id="risk-number"></div>
+            <div class="risk-label" id="risk-label-text">Risk Score</div>
+          </div>
+        </div>
+        <div class="result-body">
+          <div class="result-title" id="result-title"></div>
+          <div class="risk-bar"><div class="risk-bar-fill" id="risk-bar-fill" style="width:0%"></div></div>
+          <div class="result-explanation" id="result-explanation"></div>
+          <div id="flags-section">
+            <div class="section-label" id="flags-label">Red Flags</div>
+            <div class="flags-list" id="flags-list"></div>
+          </div>
+          <div style="height:16px"></div>
+          <div id="advice-section">
+            <div class="section-label" id="advice-label">Recommended Actions</div>
+            <div class="advice-list" id="advice-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT -->
+    <div class="recent-section" id="recent-section" style="display:none">
+      <div class="recent-header">
+        <div class="recent-title">📋 <span id="recent-label">Recent Analyses</span></div>
+        <button class="clear-btn" onclick="clearHistory()" id="clear-label">Clear</button>
+      </div>
+      <div class="recent-list" id="recent-list"></div>
+    </div>
+
   </div>
-</section>
+</div>
 
 <!-- FOOTER -->
 <footer>
-  <div class="container">
-    <div class="footer-links">
-      <a href="#" onclick="showToast('Privacy policy coming soon', 'info'); return false;">Privacy</a>
-      <a href="#" onclick="showToast('Terms of service coming soon', 'info'); return false;">Terms</a>
-      <a href="#" onclick="openModal('auth'); return false;">Sign in</a>
-      <a href="#pricing" onclick="scrollToPricing(); return false;">Pricing</a>
-    </div>
-    <div>© 2025 ScamShield AI — Protecting people worldwide 🌍</div>
-    <div style="margin-top:6px; font-size:12px;">Powered by Google Gemini AI · Built with Supabase</div>
-  </div>
+  <div class="footer-logo">ScamShield</div>
+  <div id="footer-text">AI-powered scam detection · Protecting you since 2024</div>
 </footer>
 
-<!-- AUTH MODAL -->
-<div class="modal-overlay" id="modal-auth" role="dialog" aria-modal="true" aria-labelledby="auth-title" onclick="closeModalOutside(event, 'auth')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('auth')" aria-label="Close dialog">✕</button>
-    <div id="auth-logged-out">
-      <div class="modal-title" id="auth-title">Welcome 👋</div>
-      <p class="modal-sub">Sign in to save your history and get 5 free analyses per day.</p>
-      <button class="btn-google" onclick="signInWithGoogle()">
-        <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        Continue with Google
-      </button>
-      <div class="divider">or</div>
-      <div class="auth-tabs" role="tablist">
-        <button class="auth-tab active" role="tab" aria-selected="true" onclick="switchAuthTab('signin', this)">Sign in</button>
-        <button class="auth-tab" role="tab" aria-selected="false" onclick="switchAuthTab('signup', this)">Sign up</button>
-      </div>
-      <div id="auth-signin">
-        <div class="form-field">
-          <label class="form-label" for="signin-email">Email</label>
-          <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" autocomplete="email">
-          <div class="form-error" id="signin-email-err">Please enter a valid email address</div>
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="signin-password">Password</label>
-          <input class="form-input" type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password">
-          <div class="form-error" id="signin-pass-err">Password must be at least 6 characters</div>
-        </div>
-        <button class="form-submit" onclick="submitAuth('signin')">Sign in →</button>
-      </div>
-      <div id="auth-signup" style="display:none;">
-        <div class="form-field">
-          <label class="form-label" for="signup-email">Email</label>
-          <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
-          <div class="form-error" id="signup-email-err">Please enter a valid email address</div>
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="signup-password">Password</label>
-          <input class="form-input" type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password">
-          <div class="form-error" id="signup-pass-err">Password must be at least 6 characters</div>
-        </div>
-        <button class="form-submit" onclick="submitAuth('signup')">Create free account →</button>
-      </div>
-    </div>
-    <div id="auth-logged-in" style="display:none;">
-      <div class="modal-title">You are signed in ✅</div>
-      <p class="modal-sub" id="auth-user-email" style="margin-bottom:24px;"></p>
-      <button class="form-submit" style="background:var(--red);" onclick="signOut(); closeModal('auth');">Sign out</button>
-    </div>
-  </div>
-</div>
-
-<!-- UPGRADE MODAL -->
-<div class="modal-overlay" id="modal-upgrade" role="dialog" aria-modal="true" aria-labelledby="upgrade-title" onclick="closeModalOutside(event, 'upgrade')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('upgrade')" aria-label="Close dialog">✕</button>
-    <div class="modal-title" id="upgrade-title">⚡ Upgrade your plan</div>
-    <p class="modal-sub">Unlock unlimited analyses and premium features.</p>
-    <div class="plan-card featured" style="margin-bottom:20px;">
-      <div class="plan-name">Pro</div>
-      <div class="plan-price" style="font-size:28px;"><sup style="font-size:14px;">$</sup>9.99<sub>/mo</sub></div>
-      <ul class="plan-features" style="margin-bottom:0;">
-        <li><span class="check">✓</span> Unlimited analyses</li>
-        <li><span class="check">✓</span> Screenshot analysis</li>
-        <li><span class="check">✓</span> Full history &amp; export</li>
-        <li><span class="check">✓</span> Priority AI processing</li>
-      </ul>
-    </div>
-    <button class="btn-plan solid" onclick="showToast('Payment integration coming soon — this is a demo!', 'info'); closeModal('upgrade');">Get Pro →</button>
-    <p style="text-align:center; font-size:11px; color:var(--text3); margin-top:12px;">Stripe secure checkout · Cancel anytime</p>
-  </div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
-
 <script>
-// ── SUPABASE INIT ──
-const SUPABASE_URL = 'https://obiblkysmekknbymhyqb.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_CpNiYE2KmnjS6zQd_ERxrA_BEZkjqvH3oCr';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API_URL = '/api/analyze';
+const MAX_FREE = 5;
 
-let currentUser = null;
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let currentTab = 'message';
+let imageData = null;
+let imageMediaType = null;
+let history = JSON.parse(localStorage.getItem('ss_history') || '[]');
+let usageCount = parseInt(localStorage.getItem('ss_usage_date') === today() ? localStorage.getItem('ss_usage') || '0' : '0');
 
-// ── STATE ──
-const DAILY_LIMIT = 5;
-const STORAGE_KEY = 'scamshield_state';
-
-function getState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState();
-    const s = JSON.parse(raw);
-    // Reset counter if new day
-    const today = new Date().toDateString();
-    if (s.date !== today) { s.count = 0; s.date = today; }
-    return s;
-  } catch { return defaultState(); }
-}
-function defaultState() {
-  return { count: 0, date: new Date().toDateString(), history: [], lang: 'en' };
-}
-function saveState(s) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+function today() { return new Date().toDateString(); }
+function saveUsage() {
+  localStorage.setItem('ss_usage', usageCount);
+  localStorage.setItem('ss_usage_date', today());
 }
 
-let state = getState();
-
-// ── LANG ──
-const LANGS = {
-  en: { analyze: '🔍 Analyze now', analyzing: 'Analyzing…', placeholder: 'Paste the suspicious message here…', urlPlaceholder: 'https://suspicious-link.com/…', phonePlaceholder: '+1 800 555 0123' },
-  fr: { analyze: '🔍 Analyser', analyzing: 'Analyse en cours…', placeholder: 'Collez le message suspect ici…', urlPlaceholder: 'https://lien-suspect.com/…', phonePlaceholder: '+33 6 12 34 56 78' },
-  es: { analyze: '🔍 Analizar', analyzing: 'Analizando…', placeholder: 'Pegue el mensaje sospechoso aquí…', urlPlaceholder: 'https://enlace-sospechoso.com/…', phonePlaceholder: '+34 600 123 456' }
-};
-
-function setLang(lang) {
-  state.lang = lang;
-  saveState(state);
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.includes(lang.toUpperCase()));
-    b.setAttribute('aria-pressed', b.textContent.includes(lang.toUpperCase()) ? 'true' : 'false');
-  });
-  const t = LANGS[lang];
-  document.getElementById('msg-input').placeholder = t.placeholder;
-  document.getElementById('url-input').placeholder = t.urlPlaceholder;
-  document.getElementById('phone-input').placeholder = t.phonePlaceholder;
-  document.querySelectorAll('.btn-analyze .btn-text').forEach(el => {
-    if (el.closest('#btn-analyze-msg, #btn-analyze-img, #btn-analyze-url, #btn-analyze-phone')) {
-      const prefix = el.closest('#btn-analyze-url') ? '🔗' : el.closest('#btn-analyze-phone') ? '📞' : '🔍';
-      el.textContent = t.analyze.replace('🔍', prefix) || t.analyze;
-    }
-  });
-  document.querySelectorAll('.btn-analyze .btn-text')[0].textContent = t.analyze;
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  hideResult();
+  hideError();
 }
 
-// ── TABS ──
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  btn.setAttribute('aria-selected', 'true');
-  document.getElementById('panel-' + name).classList.add('active');
-  document.getElementById('result-panel').classList.remove('show');
+// ─── FILE HANDLING ────────────────────────────────────────────────────────────
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  loadImageFile(file);
 }
 
-// ── EXAMPLES ──
-const EXAMPLES = {
-  parcel: `Dear customer, your parcel #7823991 is on hold. A customs fee of £2.99 is required within 24 hours or it will be returned. Pay immediately: http://royalmail-delivery.verify-now.com/pay`,
-  bank: `URGENT: Your Barclays account has been temporarily suspended due to suspicious activity. Please verify your identity immediately to restore access: https://barclays-secure.account-verify.net/login`,
-  job: `Hi! I found your profile and we'd like to offer you a remote position paying $5,000/week. No experience needed! Just send us your personal details and a $150 registration fee to get started.`,
-  lottery: `Congratulations! You've been selected as the winner of our $1,500,000 international lottery draw. To claim your prize, reply with your full name, address and bank details. Reference: WIN-2025-XK7`,
-  legit: `Hi Sarah, just a reminder that your dentist appointment is confirmed for Thursday, June 12th at 10:30am with Dr. Johnson. Reply YES to confirm or call us at (555) 234-5678 to reschedule.`
+function loadImageFile(file) {
+  if (file.size > 10 * 1024 * 1024) { showError('Image too large. Max 10MB.'); return; }
+  imageMediaType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    imageData = e.target.result.split(',')[1];
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('drop-zone').style.display = 'none';
+    document.getElementById('image-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  imageData = null;
+  imageMediaType = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('image-preview').style.display = 'none';
+}
+
+// Drag and drop
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadImageFile(file);
+});
+
+// ─── EXAMPLES ─────────────────────────────────────────────────────────────────
+const examples = {
+  parcel: "Your parcel could not be delivered. A fee of £2.99 is required to reschedule. Pay now: http://parcel-redelivery.uk/pay",
+  bank: "URGENT: Your Chase account has been suspended due to suspicious activity. Verify your identity immediately: http://chase-secure-verify.com",
+  job: "Congratulations! You've been selected for a remote position paying $5,000/week. No experience needed. Send your SSN and bank details to jobs@quick-hire.net",
+  lottery: "You have won £500,000 in the UK National Lottery! To claim your prize, send £50 processing fee to: lottery@winners-uk.org",
+  legit: "Hi Sarah, just confirming our meeting tomorrow at 3pm. I've attached the agenda. Looking forward to catching up! Best, Tom"
 };
 
 function loadExample(key) {
-  document.getElementById('msg-input').value = EXAMPLES[key];
-  document.getElementById('msg-input').focus();
+  switchTab('message');
+  document.getElementById('msg-input').value = examples[key];
 }
 
-// ── COUNTER ──
-function updateCounter() {
-  const used = state.count;
-  const pct = (used / DAILY_LIMIT) * 100;
-  ['counter-fill', 'counter-fill-2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.width = pct + '%';
-    el.classList.toggle('warning', used >= 3 && used < 5);
-    el.classList.toggle('danger', used >= 5);
-  });
-  ['counter-text', 'counter-text-2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = `${used} / ${DAILY_LIMIT} today`;
-  });
-}
-updateCounter();
+// ─── ANALYZE ─────────────────────────────────────────────────────────────────
+async function analyze() {
+  hideError();
+  hideResult();
 
-// ── PHONE VALIDATION ──
-function isValidPhone(val) {
-  return /^\+?[\d\s\-\(\)]{7,20}$/.test(val.trim());
-}
-
-// ── ANALYZE ──
-async function analyze(type) {
-  if (state.count >= DAILY_LIMIT) {
-    openModal('upgrade');
-    return;
-  }
-
+  // Get content
   let content = '';
-  let imageBase64 = null;
+  if (currentTab === 'message') content = document.getElementById('msg-input').value.trim();
+  else if (currentTab === 'url') content = document.getElementById('url-input').value.trim();
+  else if (currentTab === 'phone') content = document.getElementById('phone-input').value.trim();
+  else if (currentTab === 'screenshot' && !imageData) { showError('Please upload a screenshot first.'); return; }
 
-  if (type === 'message') content = document.getElementById('msg-input').value.trim();
-  else if (type === 'url') content = document.getElementById('url-input').value.trim();
-  else if (type === 'phone') {
-    content = document.getElementById('phone-input').value.trim();
-    if (!isValidPhone(content)) {
-      document.getElementById('phone-error').style.display = 'block';
-      return;
-    }
-    document.getElementById('phone-error').style.display = 'none';
-  }
-  else if (type === 'screenshot') {
-    const img = document.getElementById('preview-img');
-    if (!img.src || document.getElementById('img-preview').style.display === 'none') {
-      showToast('Please upload or paste a screenshot first', 'error');
-      return;
-    }
-    imageBase64 = img.src.includes(',') ? img.src.split(',')[1] : null;
-    content = 'screenshot';
-  }
-
-  if (!content && type !== 'screenshot') {
-    showToast('Please enter something to analyze', 'error');
+  if (currentTab !== 'screenshot' && !content) {
+    showError('Please enter something to analyze.');
     return;
   }
 
-  const btnMap = { message: 'btn-analyze-msg', screenshot: 'btn-analyze-img', url: 'btn-analyze-url', phone: 'btn-analyze-phone' };
-  const btn = document.getElementById(btnMap[type]);
-  btn.classList.add('loading');
-  btn.disabled = true;
-  document.getElementById('result-panel').classList.remove('show');
+  if (usageCount >= MAX_FREE) {
+    showError('Daily limit reached (5/5). Sign up for unlimited analyses.');
+    return;
+  }
+
+  setLoading(true);
 
   try {
-    const body = { type, content };
-    if (imageBase64) body.imageBase64 = imageBase64;
+    const body = { type: currentTab, content };
+    if (currentTab === 'screenshot') {
+      body.imageBase64 = imageData;
+      body.imageMediaType = imageMediaType;
+    }
 
-    const response = await fetch('/api/analyze', {
+    const resp = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || 'Server error ' + response.status);
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) {
+      throw new Error(data.error || 'Analysis failed');
     }
 
-    const result = await response.json();
+    // Update usage
+    usageCount++;
+    saveUsage();
+    updateUsageBar();
 
-    state.count++;
-    state.date = new Date().toDateString();
+    // Save to history
+    const preview = currentTab === 'screenshot' ? '[Screenshot]' : content.slice(0, 60);
+    const histItem = { type: currentTab, preview, verdict: data.verdict, score: data.riskScore, ts: Date.now(), result: data };
+    history.unshift(histItem);
+    if (history.length > 10) history.pop();
+    localStorage.setItem('ss_history', JSON.stringify(history));
 
-    const histItem = {
-      id: Date.now(),
-      type,
-      text: type === 'screenshot' ? '📸 Screenshot' : content.slice(0, 60) + (content.length > 60 ? '\u2026' : ''),
-      verdict: result.verdict,
-      score: result.score
-    };
-    state.history.unshift(histItem);
-    if (state.history.length > 10) state.history.pop();
-
-    saveState(state);
-    updateCounter();
+    showResult(data);
     renderHistory();
-    showResult(result, type);
-    saveToCloud(type, content, result);
-
-    if (state.count >= DAILY_LIMIT) {
-      showToast('Daily limit reached — upgrade for unlimited analyses', 'info');
-    }
 
   } catch (err) {
-    console.error('Analysis error:', err);
-    showToast('Analysis failed: ' + err.message, 'error');
+    showError(err.message || 'Something went wrong. Please try again.');
   } finally {
-    btn.classList.remove('loading');
-    btn.disabled = false;
+    setLoading(false);
   }
 }
 
-// ── RENDER RESULT ──
-function showResult(r, type) {
-  const panel = document.getElementById('result-panel');
-  const scoreColor = r.verdict === 'scam' ? 'var(--red)' : r.verdict === 'legit' ? 'var(--green)' : 'var(--yellow)';
-  const flagsHTML = r.flags.map(f => `<span class="flag ${f.type}">${f.text}</span>`).join('');
-  const typeLabel = { message: 'Message', screenshot: 'Screenshot', url: 'URL', phone: 'Phone number' }[type];
-
-  panel.innerHTML = `
-    <div class="verdict ${r.verdict}" role="status" aria-label="${r.label}">
-      <div class="verdict-icon" aria-hidden="true">${r.verdict === 'scam' ? '🚨' : r.verdict === 'legit' ? '✅' : '⚠️'}</div>
-      <div>
-        <div class="verdict-label">${r.label}</div>
-        <div class="verdict-sub">${r.sub}</div>
-      </div>
-      <div class="verdict-score">
-        <div class="score-circle" aria-label="Risk score ${r.score}%">${r.score}%</div>
-        <div class="score-label">risk score</div>
-      </div>
-    </div>
-    <div class="result-detail">
-      <div class="result-section">
-        <div class="result-section-title">Risk indicators</div>
-        <div class="flags">${flagsHTML}</div>
-      </div>
-      <div class="result-section">
-        <div class="result-section-title">AI Summary</div>
-        <p class="result-text">${r.summary}</p>
-      </div>
-      <div class="result-actions">
-        <button class="btn-sm" onclick="copyResult()">📋 Copy result</button>
-        <button class="btn-sm" onclick="reportFeedback('correct')">👍 Correct</button>
-        <button class="btn-sm" onclick="reportFeedback('wrong')">👎 Wrong</button>
-        <button class="btn-sm" onclick="clearResult()">✕ Close</button>
-      </div>
-    </div>
-  `;
-  panel.classList.add('show');
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function setLoading(on) {
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
 }
 
-function clearResult() {
-  document.getElementById('result-panel').classList.remove('show');
-}
-function copyResult() {
-  const text = document.querySelector('.verdict-label')?.textContent + '\n' + document.querySelector('.result-text')?.textContent;
-  navigator.clipboard.writeText(text).then(() => showToast('Result copied to clipboard', 'success')).catch(() => showToast('Copy failed', 'error'));
-}
-function reportFeedback(type) {
-  showToast(type === 'correct' ? 'Thanks for the feedback! 👍' : 'Thanks — we\'ll improve our model with this.', 'success');
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = '⚠️ ' + msg;
+  el.classList.add('visible');
 }
 
-// ── HISTORY ──
+function hideError() {
+  document.getElementById('error-msg').classList.remove('visible');
+}
+
+function hideResult() {
+  document.getElementById('result-area').classList.remove('visible');
+}
+
+function showResult(data) {
+  const { verdict, riskScore, title, explanation, redFlags, advice } = data;
+  const level = riskScore >= 70 ? 'high' : riskScore >= 31 ? 'medium' : 'low';
+  const icons = { SCAM: '🚨', SUSPICIOUS: '⚠️', LEGITIMATE: '✅' };
+
+  document.getElementById('verdict-badge').className = 'verdict-badge verdict-' + verdict;
+  document.getElementById('verdict-badge').textContent = icons[verdict] + ' ' + verdict;
+
+  document.getElementById('risk-number').className = 'risk-number ' + level;
+  document.getElementById('risk-number').textContent = riskScore + '%';
+
+  document.getElementById('result-title').textContent = title || '';
+  document.getElementById('result-explanation').textContent = explanation || '';
+
+  const bar = document.getElementById('risk-bar-fill');
+  bar.className = 'risk-bar-fill ' + level;
+  setTimeout(() => { bar.style.width = riskScore + '%'; }, 50);
+
+  // Red flags
+  const flagsList = document.getElementById('flags-list');
+  flagsList.innerHTML = '';
+  if (redFlags && redFlags.length > 0) {
+    redFlags.forEach(f => {
+      flagsList.innerHTML += `<div class="flag-item"><span class="flag-icon">⚑</span>${f}</div>`;
+    });
+  } else {
+    flagsList.innerHTML = `<div class="no-flags">No red flags detected.</div>`;
+  }
+
+  // Advice
+  const adviceList = document.getElementById('advice-list');
+  adviceList.innerHTML = '';
+  (advice || []).forEach((a, i) => {
+    adviceList.innerHTML += `<div class="advice-item"><span class="advice-num">${i+1}</span>${a}</div>`;
+  });
+
+  document.getElementById('result-area').classList.add('visible');
+  document.getElementById('result-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function updateUsageBar() {
+  const pct = (usageCount / MAX_FREE) * 100;
+  document.getElementById('usage-fill').style.width = pct + '%';
+  document.getElementById('usage-text').textContent = usageCount + ' / ' + MAX_FREE + ' today';
+}
+
 function renderHistory() {
-  const list = document.getElementById('history-list');
-  if (!state.history.length) {
-    list.innerHTML = '<div class="history-empty">No analyses yet. Try one above!</div>';
-    return;
-  }
-  const typeEmoji = { message: '💬', screenshot: '📸', url: '🔗', phone: '📞' };
-  list.innerHTML = state.history.map(item => `
-    <div class="history-item" onclick="replayHistory(${item.id})">
-      <div class="history-badge ${item.verdict}" aria-label="${item.verdict}"></div>
-      <div class="history-text">${escapeHTML(item.text)}</div>
-      <div class="history-type">${typeEmoji[item.type] || '💬'} ${item.type}</div>
-    </div>
-  `).join('');
+  if (!history.length) { document.getElementById('recent-section').style.display = 'none'; return; }
+  document.getElementById('recent-section').style.display = 'block';
+  const list = document.getElementById('recent-list');
+  list.innerHTML = '';
+  history.forEach((item, i) => {
+    const score = item.score;
+    const level = score >= 70 ? 'high' : score >= 31 ? 'medium' : 'low';
+    const colors = { high: 'var(--red2)', medium: 'var(--yellow)', low: 'var(--green)' };
+    list.innerHTML += `
+      <div class="recent-item" onclick="showHistoryItem(${i})">
+        <div class="recent-content">
+          <div class="recent-verdict-dot dot-${item.verdict}"></div>
+          <div class="recent-text">${escHtml(item.preview)}</div>
+        </div>
+        <div class="recent-meta">
+          <span class="recent-type">${item.type}</span>
+          <span class="recent-score" style="color:${colors[level]}">${score}%</span>
+        </div>
+      </div>`;
+  });
 }
+
+function showHistoryItem(i) {
+  showResult(history[i].result);
+}
+
 function clearHistory() {
-  state.history = [];
-  saveState(state);
+  history = [];
+  localStorage.removeItem('ss_history');
   renderHistory();
-  showToast('History cleared', 'info');
+  hideResult();
 }
-function replayHistory(id) {
-  const item = state.history.find(h => h.id === id);
-  if (!item) return;
-  showToast('Replaying analysis…', 'info');
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ─── I18N (minimal) ───────────────────────────────────────────────────────────
+const i18n = {
+  en: {
+    'hero-badge': 'AI-Powered Protection · v2.0',
+    'hero-h1': 'Never get<br><em>scammed.</em>',
+    'hero-p': 'Instantly analyze any suspicious message, email, URL, or screenshot with advanced AI — in 50+ languages.',
+    'stat1': 'Accuracy', 'stat2': 'Analysis', 'stat3': 'Languages', 'stat4': 'Scams blocked',
+    'live-label': 'Live protection',
+    't-message': 'Message', 't-screenshot': 'Screenshot', 't-url': 'URL', 't-phone': 'Phone',
+    'analyze-label': '🔍 Analyze now',
+    'auto-detect-label': 'Auto-detected language',
+    'recent-label': 'Recent Analyses', 'clear-label': 'Clear',
+    'ex-label': 'Examples:', 'ex-parcel': 'Parcel scam', 'ex-bank': 'Bank phishing',
+    'ex-job': 'Fake job offer', 'ex-lottery': 'Lottery scam', 'ex-legit': 'Legit email',
+    'drop-text': 'Drop a screenshot here or click to upload', 'drop-hint': 'PNG, JPG, WEBP · Max 10MB',
+    'flags-label': 'RED FLAGS', 'advice-label': 'RECOMMENDED ACTIONS',
+    'risk-label-text': 'Risk Score', 'nav-pricing': 'Pricing', 'nav-signin': 'Sign in', 'nav-cta': 'Get started free →',
+    'footer-text': 'AI-powered scam detection · Protecting you since 2024',
+  },
+  fr: {
+    'hero-badge': 'Protection par IA · v2.0',
+    'hero-h1': 'Ne vous faites plus<br><em>arnaquer.</em>',
+    'hero-p': 'Analysez instantanément tout message, email, URL ou capture suspecte grâce à l\'IA avancée — en 50+ langues.',
+    'stat1': 'Précision', 'stat2': 'Analyse', 'stat3': 'Langues', 'stat4': 'Arnaques bloquées',
+    'live-label': 'Protection active',
+    't-message': 'Message', 't-screenshot': 'Capture', 't-url': 'URL', 't-phone': 'Téléphone',
+    'analyze-label': '🔍 Analyser',
+    'auto-detect-label': 'Langue auto-détectée',
+    'recent-label': 'Analyses récentes', 'clear-label': 'Effacer',
+    'ex-label': 'Exemples :', 'ex-parcel': 'Arnaque colis', 'ex-bank': 'Phishing bancaire',
+    'ex-job': 'Fausse offre emploi', 'ex-lottery': 'Arnaque loterie', 'ex-legit': 'Email légitime',
+    'drop-text': 'Déposez une capture ou cliquez pour télécharger', 'drop-hint': 'PNG, JPG, WEBP · Max 10Mo',
+    'flags-label': 'SIGNAUX D\'ALERTE', 'advice-label': 'ACTIONS RECOMMANDÉES',
+    'risk-label-text': 'Score de risque', 'nav-pricing': 'Tarifs', 'nav-signin': 'Connexion', 'nav-cta': 'Commencer gratuitement →',
+    'footer-text': 'Détection d\'arnaques par IA · Vous protège depuis 2024',
+  },
+  es: {
+    'hero-badge': 'Protección con IA · v2.0',
+    'hero-h1': 'Nunca más te<br><em>estafen.</em>',
+    'hero-p': 'Analiza al instante cualquier mensaje, email, URL o captura sospechosa con IA avanzada — en 50+ idiomas.',
+    'stat1': 'Precisión', 'stat2': 'Análisis', 'stat3': 'Idiomas', 'stat4': 'Estafas bloqueadas',
+    'live-label': 'Protección activa',
+    't-message': 'Mensaje', 't-screenshot': 'Captura', 't-url': 'URL', 't-phone': 'Teléfono',
+    'analyze-label': '🔍 Analizar ahora',
+    'auto-detect-label': 'Idioma auto-detectado',
+    'recent-label': 'Análisis recientes', 'clear-label': 'Limpiar',
+    'ex-label': 'Ejemplos:', 'ex-parcel': 'Estafa paquete', 'ex-bank': 'Phishing bancario',
+    'ex-job': 'Falsa oferta laboral', 'ex-lottery': 'Estafa lotería', 'ex-legit': 'Email legítimo',
+    'drop-text': 'Suelta una captura aquí o haz clic para subir', 'drop-hint': 'PNG, JPG, WEBP · Máx 10MB',
+    'flags-label': 'SEÑALES DE ALERTA', 'advice-label': 'ACCIONES RECOMENDADAS',
+    'risk-label-text': 'Puntuación de riesgo', 'nav-pricing': 'Precios', 'nav-signin': 'Iniciar sesión', 'nav-cta': 'Empezar gratis →',
+    'footer-text': 'Detección de estafas por IA · Protegiéndote desde 2024',
+  }
+};
+
+function setLang(lang) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+  const t = i18n[lang] || i18n.en;
+  for (const [id, val] of Object.entries(t)) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val;
+  }
+  examples.parcel = lang === 'fr'
+    ? "Votre colis n'a pas pu être livré. Des frais de 2,99€ sont requis pour reprogrammer: http://colis-relivraison.fr/payer"
+    : lang === 'es'
+    ? "Su paquete no pudo ser entregado. Se requiere una tarifa de €2.99: http://paquete-reentrega.es/pagar"
+    : "Your parcel could not be delivered. A fee of £2.99 is required to reschedule: http://parcel-redelivery.uk/pay";
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+updateUsageBar();
 renderHistory();
-
-// ── IMAGE HANDLING ──
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (file) loadImage(file);
-}
-function handleDragOver(e) {
-  e.preventDefault();
-  document.getElementById('drop-zone').classList.add('drag-over');
-}
-function handleDragLeave() {
-  document.getElementById('drop-zone').classList.remove('drag-over');
-}
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('drop-zone').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) loadImage(file);
-  else showToast('Please drop an image file (PNG, JPG, WEBP)', 'error');
-}
-function loadImage(file) {
-  if (file.size > 10 * 1024 * 1024) { showToast('Image is too large (max 10MB)', 'error'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('preview-img').src = e.target.result;
-    document.getElementById('img-preview').style.display = 'block';
-    document.getElementById('drop-zone').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-}
-function clearImage() {
-  document.getElementById('preview-img').src = '';
-  document.getElementById('img-preview').style.display = 'none';
-  document.getElementById('drop-zone').style.display = 'block';
-  document.getElementById('file-input').value = '';
-}
-
-// Paste image globally
-document.addEventListener('paste', e => {
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (const item of items) {
-    if (item.type.startsWith('image/')) {
-      // Switch to screenshot tab
-      document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab')[1].classList.add('active');
-      document.querySelectorAll('.tab')[1].setAttribute('aria-selected', 'true');
-      document.getElementById('panel-screenshot').classList.add('active');
-      loadImage(item.getAsFile());
-      showToast('Screenshot pasted! Ready to analyze.', 'success');
-      return;
-    }
-  }
-});
-
-// ── MODALS ──
-function openModal(id) {
-  document.getElementById('modal-' + id).classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeModal(id) {
-  document.getElementById('modal-' + id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-function closeModalOutside(e, id) {
-  if (e.target === document.getElementById('modal-' + id)) closeModal(id);
-}
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeModal('auth');
-    closeModal('upgrade');
-  }
-});
-
-function switchAuthTab(tab, btn) {
-  document.querySelectorAll('.auth-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
-  btn.classList.add('active');
-  btn.setAttribute('aria-selected', 'true');
-  document.getElementById('auth-signin').style.display = tab === 'signin' ? 'block' : 'none';
-  document.getElementById('auth-signup').style.display = tab === 'signup' ? 'block' : 'none';
-}
-
-// ── SUPABASE AUTH ──
-async function signInWithGoogle() {
-  const { error } = await _supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin }
-  });
-  if (error) showToast('Google sign-in failed: ' + error.message, 'error');
-}
-
-async function submitAuth(type) {
-  const emailEl = document.getElementById(type + '-email');
-  const passEl  = document.getElementById(type + '-password');
-  const emailErr = document.getElementById(type + '-email-err');
-  const passErr  = document.getElementById(type + '-pass-err');
-  let valid = true;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
-    emailErr.style.display = 'block'; valid = false;
-  } else emailErr.style.display = 'none';
-  if (passEl.value.length < 6) {
-    passErr.style.display = 'block'; valid = false;
-  } else passErr.style.display = 'none';
-  if (!valid) return;
-
-  let result;
-  if (type === 'signin') {
-    result = await _supabase.auth.signInWithPassword({ email: emailEl.value, password: passEl.value });
-  } else {
-    result = await _supabase.auth.signUp({ email: emailEl.value, password: passEl.value });
-  }
-  if (result.error) {
-    showToast(result.error.message, 'error');
-    return;
-  }
-  closeModal('auth');
-  showToast(type === 'signin' ? 'Signed in successfully! 👋' : 'Account created! Welcome to ScamShield 🛡', 'success');
-}
-
-async function signOut() {
-  await _supabase.auth.signOut();
-  currentUser = null;
-  updateAuthUI(null);
-  state.history = [];
-  saveState(state);
-  renderHistory();
-  showToast('Signed out', 'info');
-}
-
-function updateAuthUI(user) {
-  currentUser = user;
-  const avatar = document.getElementById('user-avatar');
-  const signin = document.getElementById('nav-signin');
-  const getstarted = document.getElementById('nav-getstarted');
-  const loggedIn = document.getElementById('auth-logged-in');
-  const loggedOut = document.getElementById('auth-logged-out');
-  const avatarCircle = document.getElementById('avatar-circle');
-  const authEmail = document.getElementById('auth-user-email');
-
-  if (user) {
-    avatar.classList.add('visible');
-    if (signin) signin.style.display = 'none';
-    if (getstarted) getstarted.style.display = 'none';
-    const name = user.user_metadata?.full_name || user.email || '';
-    const pic = user.user_metadata?.avatar_url;
-    if (pic) avatarCircle.innerHTML = '<img src="' + pic + '" alt="avatar">';
-    else avatarCircle.textContent = name.charAt(0).toUpperCase() || '?';
-    if (authEmail) authEmail.textContent = user.email;
-    if (loggedIn) loggedIn.style.display = 'block';
-    if (loggedOut) loggedOut.style.display = 'none';
-    loadCloudHistory();
-  } else {
-    avatar.classList.remove('visible');
-    if (signin) signin.style.display = '';
-    if (getstarted) getstarted.style.display = '';
-    if (loggedIn) loggedIn.style.display = 'none';
-    if (loggedOut) loggedOut.style.display = 'block';
-  }
-}
-
-// Load history from Supabase
-async function loadCloudHistory() {
-  if (!currentUser) return;
-  const { data, error } = await _supabase
-    .from('analyses')
-    .select('id, type, content, verdict, score, created_at')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
-  if (error) { console.error('History load error:', error); return; }
-  if (data && data.length) {
-    state.history = data.map(r => ({
-      id: r.id,
-      type: r.type,
-      text: r.content ? r.content.slice(0, 60) + (r.content.length > 60 ? '\u2026' : '') : '\ud83d\udcf8 Screenshot',
-      verdict: r.verdict,
-      score: r.score
-    }));
-    saveState(state);
-    renderHistory();
-  }
-}
-
-// Save analysis to Supabase
-async function saveToCloud(type, content, result) {
-  if (!currentUser) return;
-  await _supabase.from('analyses').insert({
-    user_id: currentUser.id,
-    type,
-    content: content && content !== 'screenshot' ? content.slice(0, 500) : null,
-    verdict: result.verdict,
-    score: result.score,
-    label: result.label,
-    summary: result.summary,
-    flags: result.flags
-  });
-}
-
-// Init auth state
-_supabase.auth.getSession().then(({ data: { session } }) => {
-  updateAuthUI(session?.user || null);
-});
-_supabase.auth.onAuthStateChange((_event, session) => {
-  updateAuthUI(session?.user || null);
-});
-
-// ── NAVIGATION ──
-function scrollToPricing() {
-  document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
-}
-function scrollToAnalyzer() {
-  document.querySelector('.analyzer-wrap').scrollIntoView({ behavior: 'smooth' });
-}
-
-// ── TOAST ──
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  const icons = { success: '✓', error: '✕', info: 'ℹ' };
-  toast.innerHTML = `<span aria-hidden="true">${icons[type] || 'ℹ'}</span> ${escapeHTML(message)}`;
-  toast.setAttribute('role', 'alert');
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.animation = 'toastOut 0.3s ease forwards';
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
-}
-
-// ── UTILS ──
-function escapeHTML(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// Init lang
-setLang(state.lang || 'en');
 </script>
 </body>
 </html>
