@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
       parts = [{ text: prompt + " Analyze this " + label + ": " + content }];
     }
 
-    var url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=" + apiKey;
+    var url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=" + apiKey;
 
     var response = await fetch(url, {
       method: "POST",
