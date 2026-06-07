@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
       ];
     }
 
-    var geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+    var geminiUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
 
     const response = await fetch(geminiUrl, {
       method: "POST",
