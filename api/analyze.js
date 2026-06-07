@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "No content provided" });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: "API key not configured" });
   }
@@ -31,57 +31,55 @@ Return this exact structure:
 
 Rules:
 - riskScore 0-30 = LEGITIMATE, 31-69 = SUSPICIOUS, 70-100 = SCAM
-- redFlags: list specific suspicious elements (empty array if none)
-- advice: 2-4 actionable steps
+- redFlags: list specific suspicious elements found (empty array if none)
+- advice: 2-4 actionable steps for the user
 - Respond in the same language as the analyzed content`;
 
   try {
-    let userContent;
+    let parts;
 
     if (type === "screenshot" && imageBase64) {
-      userContent = [
+      parts = [
         {
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: imageMediaType || "image/jpeg",
+          inline_data: {
+            mime_type: imageMediaType || "image/jpeg",
             data: imageBase64,
           },
         },
-        { type: "text", text: "Analyze this screenshot for scam indicators. Return only the JSON." },
+        { text: systemPrompt + "\n\nAnalyze this screenshot for scam indicators. Return only the JSON." },
       ];
     } else {
       const labels = { message: "message or email", url: "URL or link", phone: "phone number" };
-      userContent = `Analyze this ${labels[type] || "content"} for scam indicators:\n\n${content}\n\nReturn only the JSON.`;
+      parts = [
+        {
+          text: systemPrompt + `\n\nAnalyze this ${labels[type] || "content"} for scam indicators:\n\n${content}\n\nReturn only the JSON.`,
+        },
+      ];
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-opus-4-5",
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userContent }],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 1024,
+          },
+        }),
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Anthropic API error:", JSON.stringify(data));
+      console.error("Gemini API error:", JSON.stringify(data));
       return res.status(500).json({ error: "AI API error", detail: data.error?.message || "Unknown error" });
     }
 
-    const rawText = data.content
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     const cleaned = rawText.replace(/```json|```/g, "").trim();
     const result = JSON.parse(cleaned);
 
