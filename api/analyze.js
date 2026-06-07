@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
             mime_type: imageMediaType || "image/jpeg",
             data: imageBase64,
           },
-        },
+        }
         { text: systemPrompt + "\n\nAnalyze this screenshot for scam indicators. Return only the JSON." },
       ];
     } else {
