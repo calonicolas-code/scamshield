@@ -80,7 +80,9 @@ Rules:
     }
 
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    const cleaned = rawText.replace(/```json|```/g, "").trim();
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+if (!jsonMatch) throw new Error("No JSON found in response");
+const cleaned = jsonMatch[0].trim();
     const result = JSON.parse(cleaned);
 
     if (!result.verdict || result.riskScore === undefined) {
